@@ -16,9 +16,12 @@ h1 small{font-size:12px;color:var(--muted);font-weight:normal}
 .tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}.tab{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;cursor:pointer}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px;text-align:center;margin-left:4px}.tab.on .badge{background:#fff;color:var(--acc)}.badge.zero{display:none}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 12px 0}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center}.kpi b{display:block;font-size:22px}.kpi span{font-size:11px;color:var(--muted)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;transition:.15s}
+.kpi:active{transform:scale(.97)}.kpi.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
+.kpi b{display:block;font-size:22px}.kpi span{font-size:11px;color:var(--muted);line-height:1.2;display:block}
 .kpi.warn b{color:var(--warn)}.kpi.acc b{color:var(--acc)}
 .card{background:var(--card);margin:10px 12px;padding:14px;border-radius:14px;border:1px solid var(--line)}
+.card.alerta{border-color:var(--warn)}
 .who{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap}.who b{font-size:16px}.who small,.muted{color:var(--muted);font-size:13px}
 .conv{background:var(--soft);border-radius:10px;padding:8px 10px;margin:8px 0;max-height:220px;overflow:auto}
 .h{margin:5px 0;padding:7px 10px;border-radius:10px;max-width:90%;white-space:pre-wrap;font-size:14px}
@@ -28,15 +31,15 @@ h1 small{font-size:12px;color:var(--muted);font-weight:normal}
 .msg textarea{width:100%;border:0;background:transparent;font:inherit;color:inherit;resize:vertical;min-height:44px;display:block;outline:none}
 .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 button{flex:1;padding:12px;border-radius:12px;border:0;font:inherit;font-weight:600;background:var(--line);color:var(--ink);cursor:pointer}
-button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.5}button.sm{flex:0 0 auto;padding:8px 12px;font-size:13px;font-weight:500}
+button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.5}
 .hist{max-height:280px;overflow:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
-.empty{color:var(--muted);text-align:center;padding:30px 16px}
-.pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}.pill.esc{background:#f3dede;color:#7a2e2e}.pill.ok{background:#e2f0e6;color:#2e7a4a}
+.empty{color:var(--muted);text-align:center;padding:26px 16px}
+.pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}.pill.esc{background:#f3dede;color:#7a2e2e}.pill.ok{background:#e2f0e6;color:#2e7a4a}.pill.warn{background:#f6e6d6;color:#8a4a10}
 .sw{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
 .toast.on{opacity:1}
 .filtros{display:flex;gap:6px;margin:10px 12px 0;flex-wrap:wrap;align-items:center}
-.filtros input{flex:1;min-width:140px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+.filtros input{flex:1;min-width:150px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
 .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;cursor:pointer}.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .since{font-size:12px;color:var(--warn)}
 </style>
@@ -64,11 +67,20 @@ const hora = iso => new Date(iso).toLocaleString('es-MX', {timeZone:'America/Mex
 const hace = iso => { const m=Math.round((Date.now()-new Date(iso))/60000); return m<1?'ahora':m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d'; };
 const seg = s => ({marca_personal:'Marca personal', familia:'Familia', book:'Book', otro:'Otro', desconocido:'—'})[s] ?? s;
 const est = s => ({nuevo:'nuevo', saludo:'saludo', precios:'recibió precios', experiencia:'experiencia', paquete:'eligió paquete', fecha:'viendo fecha', anticipo:'anticipo', cerrado:'cerrado ✔', perdido:'perdido', escalado:'escalado'})[s] ?? s;
+const diaMX = d => new Date(d).toLocaleDateString('en-CA', {timeZone:'America/Mexico_City'});
+const esHoy = d => d && diaMX(d) === diaMX(Date.now());
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
 async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
 function editando(){ const a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')) return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
 
-// Avisos: sonido + notificación del navegador cuando aparece algo nuevo
+// ¿el cliente escribió y nadie contestó?
+function sinRespuesta(l){
+  if(!l.ultimo_entrante_at) return false;
+  if(['cerrado','perdido','escalado'].includes(l.estado)) return false;
+  const e=new Date(l.ultimo_entrante_at), a=new Date(l.ultima_respuesta_agente_at||0), r=new Date(l.ultima_respuesta_red_at||0);
+  return e>a && e>r && (Date.now()-e) > 20*60000;
+}
+
 function beep(){ if(!sonido) return; try{ const c=new (window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value=880; g.gain.setValueAtTime(0.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(0.3,c.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.5); o.start(); o.stop(c.currentTime+0.5); }catch(e){} }
 function notificar(titulo, cuerpo){ try{ if('Notification' in window && Notification.permission==='granted' && document.hidden){ const n=new Notification(titulo,{body:cuerpo,tag:'vitral-agente'}); n.onclick=()=>{window.focus(); n.close();}; } }catch(e){} }
 function avisar(){
@@ -80,10 +92,41 @@ function avisar(){
   vistos = ahora;
 }
 async function pedirPermiso(){ if(!('Notification' in window)) return toast('Este navegador no soporta notificaciones'); const p=await Notification.requestPermission(); toast(p==='granted'?'Notificaciones activadas':'No se activaron'); render(); }
-
 async function cargar(f){ if(!f&&editando()){ return; } try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); }
-
 function conv(ms){ if(!ms||!ms.length) return ''; return `<div class="conv">${ms.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')}</div>`; }
+
+// Tocar un número del tablero lleva a la lista que lo forma
+function verKpi(k){
+  if(k==='escalados'){ vista='esc'; render(); return; }
+  vista='leads'; filtro=k; busca=''; render();
+}
+
+function tarjetaLead(l){
+  const sr = sinRespuesta(l);
+  const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
+  return `<div class="card ${sr?'alerta':''}"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
+    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} <small class="muted">${esc(l.telefono)}</small></div>
+    <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')">Pedir propuesta</button></div>
+    <div class="hist" id="hl${l.id}" hidden></div></div>`;
+}
+
+function listaLeads(){
+  const q=busca.trim().toLowerCase();
+  return S.leads.filter(l=>{
+    if(filtro==='activos' && ['cerrado','perdido'].includes(l.estado)) return false;
+    if(filtro==='leads_hoy' && !esHoy(l.ultimo_entrante_at)) return false;
+    if(filtro==='agente_hoy' && !esHoy(l.ultima_respuesta_agente_at)) return false;
+    if(filtro==='sin_respuesta' && !sinRespuesta(l)) return false;
+    if(['escalado','cerrado','perdido'].includes(filtro) && l.estado!==filtro) return false;
+    if(q && !((l.nombre||'').toLowerCase().includes(q) || (l.telefono||'').includes(q))) return false;
+    return true;
+  });
+}
+function renderLista(){
+  const el=$('#lista'); if(!el) return;
+  const lista=listaLeads();
+  el.innerHTML = lista.length ? lista.map(tarjetaLead).join('') : '<div class="empty">Sin leads con ese filtro</div>';
+}
 
 function render(){
   const P=S.pendientes.length, E=S.escalados.length;
@@ -93,15 +136,20 @@ function render(){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===vista));
   const m=$('#main'); m.innerHTML='';
   const k=S.tablero||{};
+  const sel = f => ((vista==='leads'&&filtro===f)||(vista==='esc'&&f==='escalados')) ? 'on' : '';
   if(vista!=='cfg') m.insertAdjacentHTML('beforeend',`<div class="kpis">
-    <div class="kpi"><b>${k.leads_hoy??0}</b><span>leads hoy</span></div>
-    <div class="kpi"><b>${k.agente_hoy??0}</b><span>contestó el agente</span></div>
-    <div class="kpi acc"><b>${k.escalados??0}</b><span>escalados</span></div>
-    <div class="kpi warn"><b>${k.sin_respuesta??0}</b><span>sin respuesta +20 min</span></div></div>`);
+    <div class="kpi ${sel('leads_hoy')}" onclick="verKpi('leads_hoy')"><b>${k.leads_hoy??0}</b><span>leads hoy</span></div>
+    <div class="kpi ${sel('agente_hoy')}" onclick="verKpi('agente_hoy')"><b>${k.agente_hoy??0}</b><span>contestó el agente</span></div>
+    <div class="kpi acc ${sel('escalados')}" onclick="verKpi('escalados')"><b>${k.escalados??0}</b><span>escalados</span></div>
+    <div class="kpi warn ${sel('sin_respuesta')}" onclick="verKpi('sin_respuesta')"><b>${k.sin_respuesta??0}</b><span>sin respuesta +20 min</span></div></div>`);
   if(!S.agente_activo && vista!=='cfg') m.insertAdjacentHTML('beforeend','<div class="card muted">El agente está apagado. Los mensajes se guardan pero no se proponen respuestas. Enciéndelo en Ajustes.</div>');
 
   if(vista==='pend'){
-    if(!P) m.insertAdjacentHTML('beforeend','<div class="empty">Nada por aprobar 👌</div>');
+    if(!P){
+      const pend=[]; if(E) pend.push(`<button class="ghost" onclick="verKpi('escalados')">Ver ${E} escalado${E>1?'s':''}</button>`);
+      if(k.sin_respuesta) pend.push(`<button class="ghost" onclick="verKpi('sin_respuesta')">Ver ${k.sin_respuesta} sin respuesta</button>`);
+      m.insertAdjacentHTML('beforeend',`<div class="empty">Nada por aprobar 👌${pend.length?'<div class="row" style="margin:14px 12px 0">'+pend.join('')+'</div>':''}</div>`);
+    }
     for(const b of S.pendientes){
       const l=b.leads||{};
       m.insertAdjacentHTML('beforeend',`<div class="card" id="b${b.id}">
@@ -125,29 +173,17 @@ function render(){
       </div>`);
     }
   } else if(vista==='leads'){
-    m.insertAdjacentHTML('beforeend',`<div class="filtros"><input id="busca" placeholder="Buscar nombre o teléfono" value="${esc(busca)}" oninput="busca=this.value;render();$('#busca').focus();$('#busca').setSelectionRange(9999,9999)">
-      ${[['activos','Activos'],['todos','Todos'],['escalado','Escalados'],['cerrado','Cerrados'],['perdido','Perdidos']].map(([k,v])=>`<span class="chip ${filtro===k?'on':''}" onclick="filtro='${k}';render()">${v}</span>`).join('')}</div>`);
-    const q=busca.trim().toLowerCase();
-    const lista=S.leads.filter(l=>{
-      if(filtro==='activos' && ['cerrado','perdido'].includes(l.estado)) return false;
-      if(['escalado','cerrado','perdido'].includes(filtro) && l.estado!==filtro) return false;
-      if(q && !((l.nombre||'').toLowerCase().includes(q) || (l.telefono||'').includes(q))) return false;
-      return true;
-    });
-    if(!lista.length) m.insertAdjacentHTML('beforeend','<div class="empty">Sin leads con ese filtro</div>');
-    for(const l of lista){
-      const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
-      m.insertAdjacentHTML('beforeend',`<div class="card"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
-        <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${quien?`<span class="pill">última respuesta: ${quien}</span>`:''} <small class="muted">${esc(l.telefono)}</small></div>
-        <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')">Pedir propuesta</button></div>
-        <div class="hist" id="hl${l.id}" hidden></div></div>`);
-    }
+    const chips=[['activos','Activos'],['leads_hoy','Hoy'],['sin_respuesta','Sin respuesta'],['agente_hoy','Contestó el agente'],['escalado','Escalados'],['todos','Todos'],['cerrado','Cerrados'],['perdido','Perdidos']];
+    m.insertAdjacentHTML('beforeend',`<div class="filtros"><input id="busca" placeholder="Buscar nombre o teléfono" value="${esc(busca)}">
+      ${chips.map(([kk,v])=>`<span class="chip ${filtro===kk?'on':''}" onclick="filtro='${kk}';render()">${v}</span>`).join('')}</div><div id="lista"></div>`);
+    const inp=$('#busca'); inp.oninput=()=>{ busca=inp.value; renderLista(); };
+    renderLista();
   } else {
     const perm = ('Notification' in window) ? Notification.permission : 'no';
     m.insertAdjacentHTML('beforeend',`<div class="card"><div class="sw"><div><b>Agente encendido</b><div class="muted">Si está apagado, solo guarda los mensajes.</div></div><button style="flex:0 0 auto" class="${S.agente_activo?'ok':''}" onclick="activo(${!S.agente_activo})">${S.agente_activo?'Encendido':'Apagado'}</button></div></div>
       <div class="card"><div class="sw"><div><b>Modo</b><div class="muted">Borrador: te propone y tú apruebas. Auto: contesta solo lo que tiene guion.</div></div><button style="flex:0 0 auto" class="${S.modo==='auto'?'acc':''}" onclick="modo('${S.modo==='auto'?'borrador':'auto'}')">${S.modo==='auto'?'Auto':'Borrador'}</button></div></div>
       <div class="card"><div class="sw"><div><b>Sonido</b><div class="muted">Un tono cuando aparece algo por aprobar o escalado (con la página abierta).</div></div><button style="flex:0 0 auto" class="${sonido?'ok':''}" onclick="sonido=!sonido;localStorage.setItem('v_sonido',sonido?'on':'off');beep();render()">${sonido?'Activado':'Apagado'}</button></div></div>
-      <div class="card"><div class="sw"><div><b>Notificaciones del navegador</b><div class="muted">Aviso aunque estés en otra pestaña o app. Estado: ${perm==='granted'?'activadas':perm==='denied'?'bloqueadas en el navegador':'sin activar'}</div></div>${perm==='granted'?'':`<button style="flex:0 0 auto" onclick="pedirPermiso()">Activar</button>`}</div></div>
+      <div class="card"><div class="sw"><div><b>Notificaciones del navegador</b><div class="muted">Aviso aunque estés en otra pestaña. Estado: ${perm==='granted'?'activadas':perm==='denied'?'bloqueadas en el navegador':'sin activar'}</div></div>${perm==='granted'?'':`<button style="flex:0 0 auto" onclick="pedirPermiso()">Activar</button>`}</div></div>
       <div class="card muted">Hoy: ${S.tablero.leads_hoy??0} leads · el agente contestó a ${S.tablero.agente_hoy??0} · tú a ${S.tablero.red_hoy??0}.<br>Los precios, el anticipo y la ventana de 30 min los cambia Claude.</div>`);
   }
 }
@@ -172,7 +208,7 @@ async function verHist(lead_id,id){
   el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
   el.scrollTop=el.scrollHeight;
 }
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v;render()});
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v; render()});
 cargar(true); setInterval(()=>cargar(), 15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)cargar()});
 </script>
