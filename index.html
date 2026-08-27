@@ -79,9 +79,9 @@ function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setT
 async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
 function editando(){ const a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')) return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
 function sinRespuesta(l){
-  if(!l.ultimo_entrante_at) return false;
+  const u=l.ultimo_util_at; if(!u) return false;
   if(['cerrado','perdido','escalado'].includes(l.estado)) return false;
-  const e=new Date(l.ultimo_entrante_at), a=new Date(l.ultima_respuesta_agente_at||0), r=new Date(l.ultima_respuesta_red_at||0);
+  const e=new Date(u), a=new Date(l.ultima_respuesta_agente_at||0), r=new Date(l.ultima_respuesta_red_at||0);
   return e>a && e>r && (Date.now()-e) > 20*60000;
 }
 function beep(){ if(!sonido) return; try{ const c=new (window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value=880; g.gain.setValueAtTime(0.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(0.3,c.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.5); o.start(); o.stop(c.currentTime+0.5); }catch(e){} }
@@ -107,7 +107,8 @@ function tarjetaLead(l){
   const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
   return `<div class="card ${sr?'alerta':''}"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
     <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
-    <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')" ${ab?'':'disabled'}>Pedir propuesta</button></div>
+    ${l.notas?`<div class="aviso">Nota: ${esc(l.notas)}</div>`:''}
+    <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')" ${ab?'':'disabled'}>Pedir propuesta</button><button class="ghost" onclick="editarNota('${l.id}')">Nota</button></div>
     <div class="hist" id="hl${l.id}" hidden></div></div>`;
 }
 function listaLeads(){
@@ -234,6 +235,12 @@ async function aprobar(id){
 }
 async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
 async function segundoToque(lead_id){ toast('Escribiendo el seguimiento…'); const r=await api('segundo_toque',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Listo, revísalo en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
+async function editarNota(lead_id){
+  const l=S.leads.find(x=>x.id===lead_id)||{};
+  const n=prompt('Nota para el agente sobre este cliente (lo que pasó antes, lo que ya sabe, cómo tratarlo). Se borra dejándola vacía.', l.notas||'');
+  if(n===null) return;
+  await api('notas',{lead_id,notas:n}); toast('Nota guardada'); cargar(true);
+}
 async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(true); }
 async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(true); }
 async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(true); }
