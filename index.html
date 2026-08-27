@@ -54,7 +54,8 @@ const hora = iso => new Date(iso).toLocaleString('es-MX', {timeZone:'America/Mex
 const seg = s => ({marca_personal:'Marca personal', familia:'Familia', book:'Book', otro:'Otro', desconocido:'—'})[s] ?? s;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
 async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
-async function cargar(){ try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } render(); }
+function editando(){ const a=document.activeElement; if(a&&a.tagName==='TEXTAREA') return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
+async function cargar(f){ if(!f&&editando()){ return; } try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } render(); }
 function render(){
   $('#nPend').textContent=S.pendientes.length; $('#nEsc').textContent=S.escalados.length;
   document.title = (S.pendientes.length ? '('+S.pendientes.length+') ' : '') + 'Vitral · Agente';
@@ -102,14 +103,14 @@ async function aprobar(id){
   const mensajes=[...card.querySelectorAll('textarea')].map(t=>t.value);
   const r=await api('aprobar',{id,mensajes});
   if(r.ok){toast(r.editado?'Enviado con tus cambios':'Enviado');}else{toast('Error: '+(r.error||'?'));btns.forEach(b=>b.disabled=false);return}
-  cargar();
+  cargar(true);
 }
-async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); vista='pend'; cargar(); }
-async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(); }
-async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(); }
-async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(); }
-async function modo(valor){ await api('modo',{valor}); toast('Modo: '+valor); cargar(); }
-async function activo(valor){ await api('activo',{valor}); toast(valor?'Agente encendido':'Agente apagado'); cargar(); }
+async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); vista='pend'; cargar(true); }
+async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(true); }
+async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(true); }
+async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(true); }
+async function modo(valor){ await api('modo',{valor}); toast('Modo: '+valor); cargar(true); }
+async function activo(valor){ await api('activo',{valor}); toast(valor?'Agente encendido':'Agente apagado'); cargar(true); }
 async function verHist(lead_id,id){
   const el=document.getElementById(id); if(!el) return;
   if(!el.hidden){el.hidden=true;return}
@@ -119,7 +120,7 @@ async function verHist(lead_id,id){
   el.scrollTop=el.scrollHeight;
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v;render()});
-cargar(); setInterval(cargar, 20000);
+cargar(true); setInterval(()=>cargar(), 20000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)cargar()});
 </script>
 </body>
