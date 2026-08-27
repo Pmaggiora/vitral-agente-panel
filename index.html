@@ -88,7 +88,7 @@ function render(){
     for(const l of S.leads){
       m.insertAdjacentHTML('beforeend',`<div class="card"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?hora(l.ultimo_entrante_at):''}</small></div>
         <div><span class="pill">${esc(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> <small class="muted">${esc(l.telefono)}</small></div>
-        <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button></div>
+        <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')">Pedir propuesta</button></div>
         <div class="hist" id="hl${l.id}" hidden></div></div>`);
     }
   } else {
@@ -104,6 +104,7 @@ async function aprobar(id){
   if(r.ok){toast(r.editado?'Enviado con tus cambios':'Enviado');}else{toast('Error: '+(r.error||'?'));btns.forEach(b=>b.disabled=false);return}
   cargar();
 }
+async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); vista='pend'; cargar(); }
 async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(); }
 async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(); }
 async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(); }
