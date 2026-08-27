@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex">
+<title>Vitral · Agente</title>
+<style>
+:root{--bg:#f6f3f0;--card:#fff;--ink:#1f1f1f;--muted:#6b6b6b;--acc:#7a2e2e;--ok:#2e7a4a;--warn:#b5651d;--line:#e6e0dc}
+@media(prefers-color-scheme:dark){:root{--bg:#161412;--card:#221e1b;--ink:#f1ece8;--muted:#a39b95;--line:#3a332f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;background:var(--bg);padding:14px 16px 8px;border-bottom:1px solid var(--line);z-index:2}
+h1{font-size:18px;margin:0 0 6px}
+.tabs{display:flex;gap:8px;overflow-x:auto}.tab{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;cursor:pointer}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px;text-align:center;margin-left:4px}.tab.on .badge{background:#fff;color:var(--acc)}
+.card{background:var(--card);margin:10px 12px;padding:14px;border-radius:14px;border:1px solid var(--line)}
+.who{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap}.who b{font-size:16px}.who small,.muted{color:var(--muted);font-size:13px}
+.msg{background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0;white-space:pre-wrap;font-size:15px}
+.msg textarea{width:100%;border:0;background:transparent;font:inherit;color:inherit;resize:vertical;min-height:44px;display:block}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{flex:1;padding:12px;border-radius:12px;border:0;font:inherit;font-weight:600;background:var(--line);color:var(--ink);cursor:pointer}
+button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.5}
+.hist{max-height:260px;overflow:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
+.h{margin:6px 0;padding:8px 10px;border-radius:10px;max-width:88%;white-space:pre-wrap;font-size:14px}
+.h.entrante{background:var(--bg)}.h.red,.h.agente{background:#e8f3ec;margin-left:auto;color:#1f1f1f}.h.agente{background:#efe3e3}
+.h small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.empty{color:var(--muted);text-align:center;padding:30px 16px}
+.pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>Vitral · Agente de WhatsApp</h1>
+  <div class="tabs">
+    <div class="tab on" data-v="pend">Por aprobar<span class="badge" id="nPend">0</span></div>
+    <div class="tab" data-v="esc">Escalados<span class="badge" id="nEsc">0</span></div>
+    <div class="tab" data-v="leads">Leads</div>
+    <div class="tab" data-v="cfg">Ajustes</div>
+  </div>
+</header>
+<main id="main"><div class="empty">Cargando…</div></main>
+<div class="toast" id="toast"></div>
+<script>
+const T = new URLSearchParams(location.search).get('t');
+const API = 'https://prqfuhjtzymdayegmetk.supabase.co/functions/v1/panel';
+let S = null, vista = 'pend';
+const $ = s => document.querySelector(s);
+const esc = s => (s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hora = iso => new Date(iso).toLocaleString('es-MX', {timeZone:'America/Mexico_City', weekday:'short', hour:'2-digit', minute:'2-digit'});
+const seg = s => ({marca_personal:'Marca personal', familia:'Familia', book:'Book', otro:'Otro', desconocido:'—'})[s] ?? s;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
+async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
+async function cargar(){ try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } render(); }
+function render(){
+  $('#nPend').textContent=S.pendientes.length; $('#nEsc').textContent=S.escalados.length;
+  document.title = (S.pendientes.length ? '('+S.pendientes.length+') ' : '') + 'Vitral · Agente';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===vista));
+  const m=$('#main'); m.innerHTML='';
+  if(!S.agente_activo && vista!=='cfg') m.insertAdjacentHTML('beforeend','<div class="card muted">El agente está apagado. Los mensajes se guardan pero no se proponen respuestas. Enciéndelo en Ajustes.</div>');
+  if(vista==='pend'){
+    if(!S.pendientes.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nada por aprobar 👌</div>');
+    for(const b of S.pendientes){
+      const l=b.leads||{};
+      m.insertAdjacentHTML('beforeend',`<div class="card" id="b${b.id}">
+        <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${esc(l.telefono)} · ${seg(l.segmento)} · ${hora(b.creado_at)}</small></div>
+        <div class="muted">${esc(b.razonamiento||'')}</div>
+        ${b.mensajes.map((t,i)=>`<div class="msg"><textarea data-i="${i}" rows="${Math.min(12, t.split('\n').length+1)}">${esc(t)}</textarea></div>`).join('')}
+        <div class="row"><button class="ok" onclick="aprobar('${b.id}')">Enviar</button><button class="ghost" onclick="descartar('${b.id}')">Descartar</button><button class="ghost" onclick="verHist('${b.lead_id}','h${b.id}')">Chat</button></div>
+        <div class="hist" id="h${b.id}" hidden></div></div>`);
+    }
+  } else if(vista==='esc'){
+    if(!S.escalados.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nada escalado</div>');
+    for(const l of S.escalados){
+      m.insertAdjacentHTML('beforeend',`<div class="card" id="e${l.id}">
+        <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${esc(l.telefono)} · ${seg(l.segmento)}</small></div>
+        <div><span class="pill">${esc(l.escalado_motivo||'fuera de guion')}</span> <small class="muted">${l.ultimo_entrante_at?hora(l.ultimo_entrante_at):''}</small></div>
+        <div class="muted" style="margin-top:6px">Contéstale desde tu WhatsApp. Cuando termines, decide qué hace el agente con este chat:</div>
+        <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="acc" style="width:100%">Abrir WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','he${l.id}')">Chat</button></div>
+        <div class="row"><button onclick="liberar('${l.id}','precios')">Devolver al agente</button><button class="ghost" onclick="cerrar('${l.id}','cerrado')">Cerrado ✔</button><button class="ghost" onclick="cerrar('${l.id}','perdido')">Perdido</button></div>
+        <div class="hist" id="he${l.id}" hidden></div></div>`);
+    }
+  } else if(vista==='leads'){
+    if(!S.leads.length) m.insertAdjacentHTML('beforeend','<div class="empty">Todavía no hay leads</div>');
+    for(const l of S.leads){
+      m.insertAdjacentHTML('beforeend',`<div class="card"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?hora(l.ultimo_entrante_at):''}</small></div>
+        <div><span class="pill">${esc(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> <small class="muted">${esc(l.telefono)}</small></div>
+        <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button></div>
+        <div class="hist" id="hl${l.id}" hidden></div></div>`);
+    }
+  } else {
+    m.insertAdjacentHTML('beforeend',`<div class="card"><div class="sw"><div><b>Agente encendido</b><div class="muted">Si está apagado, solo guarda los mensajes.</div></div><button style="flex:0 0 auto" class="${S.agente_activo?'ok':''}" onclick="activo(${!S.agente_activo})">${S.agente_activo?'Encendido':'Apagado'}</button></div></div>
+      <div class="card"><div class="sw"><div><b>Modo</b><div class="muted">Borrador: te propone y tú apruebas. Auto: contesta solo lo que tiene guion.</div></div><button style="flex:0 0 auto" class="${S.modo==='auto'?'acc':''}" onclick="modo('${S.modo==='auto'?'borrador':'auto'}')">${S.modo==='auto'?'Auto':'Borrador'}</button></div></div>
+      <div class="card muted">Los precios, el anticipo y la ventana de 30 min viven en la configuración del agente. Pídele a Claude cualquier cambio.</div>`);
+  }
+}
+async function aprobar(id){
+  const card=$('#b'+id); const btns=card.querySelectorAll('button'); btns.forEach(b=>b.disabled=true);
+  const mensajes=[...card.querySelectorAll('textarea')].map(t=>t.value);
+  const r=await api('aprobar',{id,mensajes});
+  if(r.ok){toast(r.editado?'Enviado con tus cambios':'Enviado');}else{toast('Error: '+(r.error||'?'));btns.forEach(b=>b.disabled=false);return}
+  cargar();
+}
+async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(); }
+async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(); }
+async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(); }
+async function modo(valor){ await api('modo',{valor}); toast('Modo: '+valor); cargar(); }
+async function activo(valor){ await api('activo',{valor}); toast(valor?'Agente encendido':'Agente apagado'); cargar(); }
+async function verHist(lead_id,id){
+  const el=document.getElementById(id); if(!el) return;
+  if(!el.hidden){el.hidden=true;return}
+  el.hidden=false; el.innerHTML='<div class="muted">Cargando…</div>';
+  const h=await api('historial',{lead_id});
+  el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Red':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
+  el.scrollTop=el.scrollHeight;
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v;render()});
+cargar(); setInterval(cargar, 20000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)cargar()});
+</script>
+</body>
+</html>
