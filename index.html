@@ -15,13 +15,13 @@ h1{font-size:17px;margin:0 0 8px;display:flex;justify-content:space-between;alig
 h1 small{font-size:12px;color:var(--muted);font-weight:normal}
 .tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}.tab{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;cursor:pointer}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px;text-align:center;margin-left:4px}.tab.on .badge{background:#fff;color:var(--acc)}.badge.zero{display:none}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 12px 0}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;transition:.15s}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px;margin:10px 12px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:.15s}
 .kpi:active{transform:scale(.97)}.kpi.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
-.kpi b{display:block;font-size:22px}.kpi span{font-size:11px;color:var(--muted);line-height:1.2;display:block}
+.kpi b{display:block;font-size:21px}.kpi span{font-size:11px;color:var(--muted);line-height:1.2;display:block}
 .kpi.warn b{color:var(--warn)}.kpi.acc b{color:var(--acc)}
 .card{background:var(--card);margin:10px 12px;padding:14px;border-radius:14px;border:1px solid var(--line)}
-.card.alerta{border-color:var(--warn)}
+.card.alerta{border-color:var(--warn)}.card.cerrada{opacity:.75}
 .who{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap}.who b{font-size:16px}.who small,.muted{color:var(--muted);font-size:13px}
 .conv{background:var(--soft);border-radius:10px;padding:8px 10px;margin:8px 0;max-height:220px;overflow:auto}
 .h{margin:5px 0;padding:7px 10px;border-radius:10px;max-width:90%;white-space:pre-wrap;font-size:14px}
@@ -29,19 +29,21 @@ h1 small{font-size:12px;color:var(--muted);font-weight:normal}
 .h small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
 .msg{background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0;white-space:pre-wrap;font-size:15px;border-left:3px solid var(--acc)}
 .msg textarea{width:100%;border:0;background:transparent;font:inherit;color:inherit;resize:vertical;min-height:44px;display:block;outline:none}
+.aviso{background:#f6e6d6;color:#8a4a10;border-radius:10px;padding:9px 11px;margin:8px 0;font-size:13px}
 .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 button{flex:1;padding:12px;border-radius:12px;border:0;font:inherit;font-weight:600;background:var(--line);color:var(--ink);cursor:pointer}
-button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.5}
+button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}
 .hist{max-height:280px;overflow:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
 .empty{color:var(--muted);text-align:center;padding:26px 16px}
 .pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}.pill.esc{background:#f3dede;color:#7a2e2e}.pill.ok{background:#e2f0e6;color:#2e7a4a}.pill.warn{background:#f6e6d6;color:#8a4a10}
 .sw{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:9;max-width:90%;text-align:center}
 .toast.on{opacity:1}
 .filtros{display:flex;gap:6px;margin:10px 12px 0;flex-wrap:wrap;align-items:center}
 .filtros input{flex:1;min-width:150px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
 .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;cursor:pointer}.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .since{font-size:12px;color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 0;border-bottom:1px solid var(--line)}td:last-child{text-align:right;font-weight:600}
 </style>
 </head>
 <body>
@@ -50,7 +52,9 @@ button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color
   <div class="tabs">
     <div class="tab on" data-v="pend">Por aprobar<span class="badge zero" id="nPend">0</span></div>
     <div class="tab" data-v="esc">Escalados<span class="badge zero" id="nEsc">0</span></div>
+    <div class="tab" data-v="seg">Seguimiento<span class="badge zero" id="nSeg">0</span></div>
     <div class="tab" data-v="leads">Leads</div>
+    <div class="tab" data-v="num">Números</div>
     <div class="tab" data-v="cfg">Ajustes</div>
   </div>
 </header>
@@ -59,7 +63,8 @@ button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color
 <script>
 const T = new URLSearchParams(location.search).get('t');
 const API = 'https://prqfuhjtzymdayegmetk.supabase.co/functions/v1/panel';
-let S = null, vista = 'pend', vistos = null, filtro = 'activos', busca = '';
+const H24 = 24*60*60*1000;
+let S = null, R = null, vista = 'pend', vistos = null, filtro = 'activos', busca = '';
 let sonido = localStorage.getItem('v_sonido') !== 'off';
 const $ = s => document.querySelector(s);
 const esc = s => (s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -69,47 +74,42 @@ const seg = s => ({marca_personal:'Marca personal', familia:'Familia', book:'Boo
 const est = s => ({nuevo:'nuevo', saludo:'saludo', precios:'recibió precios', experiencia:'experiencia', paquete:'eligió paquete', fecha:'viendo fecha', anticipo:'anticipo', cerrado:'cerrado ✔', perdido:'perdido', escalado:'escalado'})[s] ?? s;
 const diaMX = d => new Date(d).toLocaleDateString('en-CA', {timeZone:'America/Mexico_City'});
 const esHoy = d => d && diaMX(d) === diaMX(Date.now());
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
+const abierta = ue => ue && (Date.now()-new Date(ue)) < H24;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),3200)}
 async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
 function editando(){ const a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')) return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
-
-// ¿el cliente escribió y nadie contestó?
 function sinRespuesta(l){
   if(!l.ultimo_entrante_at) return false;
   if(['cerrado','perdido','escalado'].includes(l.estado)) return false;
   const e=new Date(l.ultimo_entrante_at), a=new Date(l.ultima_respuesta_agente_at||0), r=new Date(l.ultima_respuesta_red_at||0);
   return e>a && e>r && (Date.now()-e) > 20*60000;
 }
-
 function beep(){ if(!sonido) return; try{ const c=new (window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value=880; g.gain.setValueAtTime(0.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(0.3,c.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.5); o.start(); o.stop(c.currentTime+0.5); }catch(e){} }
-function notificar(titulo, cuerpo){ try{ if('Notification' in window && Notification.permission==='granted' && document.hidden){ const n=new Notification(titulo,{body:cuerpo,tag:'vitral-agente'}); n.onclick=()=>{window.focus(); n.close();}; } }catch(e){} }
+function notificar(t,c){ try{ if('Notification' in window && Notification.permission==='granted' && document.hidden){ const n=new Notification(t,{body:c,tag:'vitral-agente'}); n.onclick=()=>{window.focus(); n.close();}; } }catch(e){} }
 function avisar(){
-  const ahora = { p: new Set(S.pendientes.map(b=>b.id)), e: new Set(S.escalados.map(l=>l.id)) };
+  const ahora = { p:new Set(S.pendientes.map(b=>b.id)), e:new Set(S.escalados.map(l=>l.id)) };
   if(vistos){
     const np=[...ahora.p].filter(x=>!vistos.p.has(x)).length, ne=[...ahora.e].filter(x=>!vistos.e.has(x)).length;
-    if(np||ne){ beep(); const partes=[]; if(np) partes.push(np+' por aprobar'); if(ne) partes.push(ne+' escalado'+(ne>1?'s':'')); notificar('Vitral · Agente', partes.join(' · ')); toast('Nuevo: '+partes.join(' · ')); }
+    if(np||ne){ beep(); const p=[]; if(np) p.push(np+' por aprobar'); if(ne) p.push(ne+' escalado'+(ne>1?'s':'')); notificar('Vitral · Agente', p.join(' · ')); toast('Nuevo: '+p.join(' · ')); }
   }
   vistos = ahora;
 }
 async function pedirPermiso(){ if(!('Notification' in window)) return toast('Este navegador no soporta notificaciones'); const p=await Notification.requestPermission(); toast(p==='granted'?'Notificaciones activadas':'No se activaron'); render(); }
-async function cargar(f){ if(!f&&editando()){ return; } try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); }
-function conv(ms){ if(!ms||!ms.length) return ''; return `<div class="conv">${ms.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')}</div>`; }
-
-// Tocar un número del tablero lleva a la lista que lo forma
+async function cargar(f){ if(!f&&editando()) return; try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); }
+function conv(ms){ if(!ms||!ms.length) return ''; return `<div class="conv">${ms.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+(m.tipo==='image'?'foto':m.tipo)+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')}</div>`; }
 function verKpi(k){
   if(k==='escalados'){ vista='esc'; render(); return; }
+  if(k==='segundo_toque'){ vista='seg'; render(); return; }
   vista='leads'; filtro=k; busca=''; render();
 }
-
 function tarjetaLead(l){
-  const sr = sinRespuesta(l);
+  const sr=sinRespuesta(l), ab=abierta(l.ultimo_entrante_at);
   const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
   return `<div class="card ${sr?'alerta':''}"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
-    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} <small class="muted">${esc(l.telefono)}</small></div>
-    <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')">Pedir propuesta</button></div>
+    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
+    <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')" ${ab?'':'disabled'}>Pedir propuesta</button></div>
     <div class="hist" id="hl${l.id}" hidden></div></div>`;
 }
-
 function listaLeads(){
   const q=busca.trim().toLowerCase();
   return S.leads.filter(l=>{
@@ -122,42 +122,43 @@ function listaLeads(){
     return true;
   });
 }
-function renderLista(){
-  const el=$('#lista'); if(!el) return;
-  const lista=listaLeads();
-  el.innerHTML = lista.length ? lista.map(tarjetaLead).join('') : '<div class="empty">Sin leads con ese filtro</div>';
-}
+function renderLista(){ const el=$('#lista'); if(!el) return; const L=listaLeads(); el.innerHTML = L.length ? L.map(tarjetaLead).join('') : '<div class="empty">Sin leads con ese filtro</div>'; }
 
 function render(){
-  const P=S.pendientes.length, E=S.escalados.length;
-  $('#nPend').textContent=P; $('#nPend').classList.toggle('zero',!P); $('#nEsc').textContent=E; $('#nEsc').classList.toggle('zero',!E);
+  const P=S.pendientes.length, E=S.escalados.length, G=(S.segundoToque||[]).filter(l=>l.ventana_abierta).length;
+  $('#nPend').textContent=P; $('#nPend').classList.toggle('zero',!P);
+  $('#nEsc').textContent=E; $('#nEsc').classList.toggle('zero',!E);
+  $('#nSeg').textContent=G; $('#nSeg').classList.toggle('zero',!G);
   document.title = ((P+E) ? '('+(P+E)+') ' : '') + 'Vitral · Agente';
   $('#estadoTxt').textContent = S.agente_activo ? (S.modo==='auto'?'auto':'borrador') : 'apagado';
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===vista));
   const m=$('#main'); m.innerHTML='';
   const k=S.tablero||{};
-  const sel = f => ((vista==='leads'&&filtro===f)||(vista==='esc'&&f==='escalados')) ? 'on' : '';
-  if(vista!=='cfg') m.insertAdjacentHTML('beforeend',`<div class="kpis">
+  const sel = f => ((vista==='leads'&&filtro===f)||(vista==='esc'&&f==='escalados')||(vista==='seg'&&f==='segundo_toque')) ? 'on' : '';
+  if(!['cfg','num'].includes(vista)) m.insertAdjacentHTML('beforeend',`<div class="kpis">
     <div class="kpi ${sel('leads_hoy')}" onclick="verKpi('leads_hoy')"><b>${k.leads_hoy??0}</b><span>leads hoy</span></div>
     <div class="kpi ${sel('agente_hoy')}" onclick="verKpi('agente_hoy')"><b>${k.agente_hoy??0}</b><span>contestó el agente</span></div>
     <div class="kpi acc ${sel('escalados')}" onclick="verKpi('escalados')"><b>${k.escalados??0}</b><span>escalados</span></div>
-    <div class="kpi warn ${sel('sin_respuesta')}" onclick="verKpi('sin_respuesta')"><b>${k.sin_respuesta??0}</b><span>sin respuesta +20 min</span></div></div>`);
-  if(!S.agente_activo && vista!=='cfg') m.insertAdjacentHTML('beforeend','<div class="card muted">El agente está apagado. Los mensajes se guardan pero no se proponen respuestas. Enciéndelo en Ajustes.</div>');
+    <div class="kpi warn ${sel('sin_respuesta')}" onclick="verKpi('sin_respuesta')"><b>${k.sin_respuesta??0}</b><span>sin respuesta</span></div>
+    <div class="kpi ${sel('segundo_toque')}" onclick="verKpi('segundo_toque')"><b>${k.segundo_toque??0}</b><span>segundo toque</span></div></div>`);
+  if(!S.agente_activo && !['cfg','num'].includes(vista)) m.insertAdjacentHTML('beforeend','<div class="card muted">El agente está apagado. Los mensajes se guardan pero no se proponen respuestas. Enciéndelo en Ajustes.</div>');
 
   if(vista==='pend'){
     if(!P){
-      const pend=[]; if(E) pend.push(`<button class="ghost" onclick="verKpi('escalados')">Ver ${E} escalado${E>1?'s':''}</button>`);
-      if(k.sin_respuesta) pend.push(`<button class="ghost" onclick="verKpi('sin_respuesta')">Ver ${k.sin_respuesta} sin respuesta</button>`);
-      m.insertAdjacentHTML('beforeend',`<div class="empty">Nada por aprobar 👌${pend.length?'<div class="row" style="margin:14px 12px 0">'+pend.join('')+'</div>':''}</div>`);
+      const b=[]; if(E) b.push(`<button class="ghost" onclick="verKpi('escalados')">Ver ${E} escalado${E>1?'s':''}</button>`);
+      if(k.sin_respuesta) b.push(`<button class="ghost" onclick="verKpi('sin_respuesta')">Ver ${k.sin_respuesta} sin respuesta</button>`);
+      if(G) b.push(`<button class="ghost" onclick="verKpi('segundo_toque')">Ver ${G} de segundo toque</button>`);
+      m.insertAdjacentHTML('beforeend',`<div class="empty">Nada por aprobar 👌${b.length?'<div class="row" style="margin:14px 12px 0">'+b.join('')+'</div>':''}</div>`);
     }
     for(const b of S.pendientes){
-      const l=b.leads||{};
-      m.insertAdjacentHTML('beforeend',`<div class="card" id="b${b.id}">
+      const l=b.leads||{}, ab=abierta(l.ultimo_entrante_at);
+      m.insertAdjacentHTML('beforeend',`<div class="card ${ab?'':'cerrada'}" id="b${b.id}">
         <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${seg(l.segmento)} · <span class="since">hace ${hace(b.creado_at)}</span></small></div>
         ${conv(S.historiales[b.lead_id])}
-        <div class="muted">Propuesta del agente · ${esc(b.razonamiento||'')}</div>
+        <div class="muted">${b.motivo==='segundo toque'?'<b>Segundo toque</b> · ':''}${esc(b.razonamiento||'')}</div>
+        ${ab?'':'<div class="aviso">Pasaron más de 24 h desde su último mensaje. WhatsApp ya no deja escribirle libremente: contéstale desde tu WhatsApp o espera a que él escriba.</div>'}
         ${b.mensajes.map((t,i)=>`<div class="msg"><textarea data-i="${i}" rows="${Math.min(12, t.split('\n').length+1)}">${esc(t)}</textarea></div>`).join('')}
-        <div class="row"><button class="ok" onclick="aprobar('${b.id}')">Enviar</button><button class="ghost" onclick="descartar('${b.id}')">Descartar</button><a style="flex:0 0 auto" href="https://wa.me/${(l.telefono||'').replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a></div>
+        <div class="row"><button class="ok" onclick="aprobar('${b.id}')" ${ab?'':'disabled'}>Enviar</button><button class="ghost" onclick="descartar('${b.id}')">Descartar</button><a style="flex:0 0 auto" href="https://wa.me/${(l.telefono||'').replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a></div>
       </div>`);
     }
   } else if(vista==='esc'){
@@ -172,29 +173,67 @@ function render(){
         <div class="row"><button onclick="liberar('${l.id}','precios')">Devolver al agente</button><button class="ghost" onclick="cerrar('${l.id}','cerrado')">Cerrado ✔</button><button class="ghost" onclick="cerrar('${l.id}','perdido')">Perdido</button></div>
       </div>`);
     }
+  } else if(vista==='seg'){
+    const lista=S.segundoToque||[];
+    m.insertAdjacentHTML('beforeend','<div class="card muted">Clientes que recibieron respuesta y se quedaron callados. El segundo toque es el grupo que mejor convierte. Ojo: solo se puede escribir libre dentro de las 24 h desde su último mensaje.</div>');
+    if(!lista.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nadie pendiente de seguimiento</div>');
+    for(const l of lista){
+      const h=Math.round(l.horas_silencio);
+      m.insertAdjacentHTML('beforeend',`<div class="card ${l.ventana_abierta?'':'cerrada'}">
+        <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>callado hace ${h} h</small></div>
+        <div><span class="pill">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.paquete?`<span class="pill ok">${l.paquete}</span>`:''} ${l.ventana_abierta?`<span class="pill warn">quedan ${Math.max(0,24-h)} h</span>`:'<span class="pill warn">ventana cerrada</span>'}</div>
+        <div class="row"><button class="acc" onclick="segundoToque('${l.id}')" ${l.ventana_abierta?'':'disabled'}>Proponer mensaje</button><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hs${l.id}')">Chat</button></div>
+        <div class="hist" id="hs${l.id}" hidden></div></div>`);
+    }
   } else if(vista==='leads'){
     const chips=[['activos','Activos'],['leads_hoy','Hoy'],['sin_respuesta','Sin respuesta'],['agente_hoy','Contestó el agente'],['escalado','Escalados'],['todos','Todos'],['cerrado','Cerrados'],['perdido','Perdidos']];
     m.insertAdjacentHTML('beforeend',`<div class="filtros"><input id="busca" placeholder="Buscar nombre o teléfono" value="${esc(busca)}">
       ${chips.map(([kk,v])=>`<span class="chip ${filtro===kk?'on':''}" onclick="filtro='${kk}';render()">${v}</span>`).join('')}</div><div id="lista"></div>`);
     const inp=$('#busca'); inp.oninput=()=>{ busca=inp.value; renderLista(); };
     renderLista();
+  } else if(vista==='num'){
+    m.insertAdjacentHTML('beforeend','<div id="rep"><div class="empty">Cargando números…</div></div>');
+    verReporte(R?.dias ?? 7);
   } else {
     const perm = ('Notification' in window) ? Notification.permission : 'no';
     m.insertAdjacentHTML('beforeend',`<div class="card"><div class="sw"><div><b>Agente encendido</b><div class="muted">Si está apagado, solo guarda los mensajes.</div></div><button style="flex:0 0 auto" class="${S.agente_activo?'ok':''}" onclick="activo(${!S.agente_activo})">${S.agente_activo?'Encendido':'Apagado'}</button></div></div>
       <div class="card"><div class="sw"><div><b>Modo</b><div class="muted">Borrador: te propone y tú apruebas. Auto: contesta solo lo que tiene guion.</div></div><button style="flex:0 0 auto" class="${S.modo==='auto'?'acc':''}" onclick="modo('${S.modo==='auto'?'borrador':'auto'}')">${S.modo==='auto'?'Auto':'Borrador'}</button></div></div>
-      <div class="card"><div class="sw"><div><b>Sonido</b><div class="muted">Un tono cuando aparece algo por aprobar o escalado (con la página abierta).</div></div><button style="flex:0 0 auto" class="${sonido?'ok':''}" onclick="sonido=!sonido;localStorage.setItem('v_sonido',sonido?'on':'off');beep();render()">${sonido?'Activado':'Apagado'}</button></div></div>
+      <div class="card"><div class="sw"><div><b>Sonido</b><div class="muted">Un tono cuando aparece algo nuevo (con la página abierta).</div></div><button style="flex:0 0 auto" class="${sonido?'ok':''}" onclick="sonido=!sonido;localStorage.setItem('v_sonido',sonido?'on':'off');beep();render()">${sonido?'Activado':'Apagado'}</button></div></div>
       <div class="card"><div class="sw"><div><b>Notificaciones del navegador</b><div class="muted">Aviso aunque estés en otra pestaña. Estado: ${perm==='granted'?'activadas':perm==='denied'?'bloqueadas en el navegador':'sin activar'}</div></div>${perm==='granted'?'':`<button style="flex:0 0 auto" onclick="pedirPermiso()">Activar</button>`}</div></div>
-      <div class="card muted">Hoy: ${S.tablero.leads_hoy??0} leads · el agente contestó a ${S.tablero.agente_hoy??0} · tú a ${S.tablero.red_hoy??0}.<br>Los precios, el anticipo y la ventana de 30 min los cambia Claude.</div>`);
+      <div class="card muted">Los precios, el guion y la ventana de 30 min los cambia Claude.</div>`);
   }
+}
+async function verReporte(dias){
+  R = await api('reporte',{dias}); R.dias=dias;
+  const el=$('#rep'); if(!el) return;
+  const a=R.agente||{}, segs=R.segmentos||{}, mot=R.motivos||{};
+  const fila=(k,v)=>`<tr><td>${k}</td><td>${v}</td></tr>`;
+  el.innerHTML=`<div class="filtros">${[[7,'7 días'],[14,'14 días'],[30,'30 días']].map(([d,t])=>`<span class="chip ${dias===d?'on':''}" onclick="verReporte(${d})">${t}</span>`).join('')}</div>
+    <div class="card"><b>Embudo</b><table>
+      ${fila('Leads nuevos', R.leads??0)}
+      ${fila('Recibieron cotización', R.cotizados??0)}
+      ${fila('Eligieron paquete', R.eligio_paquete??0)}
+      ${fila('Cerrados', R.cerrados??0)}
+      ${fila('Perdidos', R.perdidos??0)}
+    </table></div>
+    <div class="card"><b>El agente</b><table>
+      ${fila('Respuestas enviadas tal cual', a.enviados??0)}
+      ${fila('Respuestas que editaste', a.editados??0)}
+      ${fila('Descartadas', a.descartados??0)}
+      ${fila('Te las escaló', a.escalados??0)}
+    </table><div class="muted" style="margin-top:8px">Cuando "editadas" baje a casi cero, es momento de pasar a modo Auto.</div></div>
+    <div class="card"><b>Por tipo de sesión</b><table>${Object.entries(segs).map(([k,v])=>fila(({marca_personal:'Marca personal',familia:'Familia',book:'Book',otro:'Otro',desconocido:'Sin clasificar'})[k]||k, v)).join('')||'<tr><td class="muted">Sin datos</td><td></td></tr>'}</table></div>
+    <div class="card"><b>Por qué te escala</b><table>${Object.entries(mot).map(([k,v])=>fila(esc(k), v)).join('')||'<tr><td class="muted">Nada escalado</td><td></td></tr>'}</table></div>`;
 }
 async function aprobar(id){
   const card=$('#b'+id); const btns=card.querySelectorAll('button'); btns.forEach(b=>b.disabled=true);
   const mensajes=[...card.querySelectorAll('textarea')].map(t=>t.value);
   const r=await api('aprobar',{id,mensajes});
-  if(r.ok){toast(r.editado?'Enviado con tus cambios':'Enviado');}else{toast('Error: '+(r.error||'?'));btns.forEach(b=>b.disabled=false);return}
+  if(r.ok){toast(r.editado?'Enviado con tus cambios':'Enviado');}else{toast(r.error||'Error');btns.forEach(b=>b.disabled=false);return}
   cargar(true);
 }
 async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
+async function segundoToque(lead_id){ toast('Escribiendo el seguimiento…'); const r=await api('segundo_toque',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Listo, revísalo en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
 async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(true); }
 async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(true); }
 async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(true); }
@@ -205,7 +244,7 @@ async function verHist(lead_id,id){
   if(!el.hidden){el.hidden=true;return}
   el.hidden=false; el.innerHTML='<div class="muted">Cargando…</div>';
   const h=await api('historial',{lead_id});
-  el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
+  el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+(m.tipo==='image'?'foto':m.tipo)+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
   el.scrollTop=el.scrollHeight;
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v; render()});
