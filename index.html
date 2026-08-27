@@ -7,37 +7,46 @@
 <meta name="robots" content="noindex">
 <title>Vitral · Agente</title>
 <style>
-:root{--bg:#f6f3f0;--card:#fff;--ink:#1f1f1f;--muted:#6b6b6b;--acc:#7a2e2e;--ok:#2e7a4a;--warn:#b5651d;--line:#e6e0dc}
-@media(prefers-color-scheme:dark){:root{--bg:#161412;--card:#221e1b;--ink:#f1ece8;--muted:#a39b95;--line:#3a332f}}
+:root{--bg:#f6f3f0;--card:#fff;--ink:#1f1f1f;--muted:#6b6b6b;--acc:#7a2e2e;--ok:#2e7a4a;--warn:#b5651d;--line:#e6e0dc;--soft:#f1ebe7}
+@media(prefers-color-scheme:dark){:root{--bg:#161412;--card:#221e1b;--ink:#f1ece8;--muted:#a39b95;--line:#3a332f;--soft:#2b2622}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
-header{position:sticky;top:0;background:var(--bg);padding:14px 16px 8px;border-bottom:1px solid var(--line);z-index:2}
-h1{font-size:18px;margin:0 0 6px}
-.tabs{display:flex;gap:8px;overflow-x:auto}.tab{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;cursor:pointer}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px;text-align:center;margin-left:4px}.tab.on .badge{background:#fff;color:var(--acc)}
+header{position:sticky;top:0;background:var(--bg);padding:12px 14px 8px;border-bottom:1px solid var(--line);z-index:2}
+h1{font-size:17px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+h1 small{font-size:12px;color:var(--muted);font-weight:normal}
+.tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}.tab{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;cursor:pointer}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px;text-align:center;margin-left:4px}.tab.on .badge{background:#fff;color:var(--acc)}.badge.zero{display:none}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 12px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center}.kpi b{display:block;font-size:22px}.kpi span{font-size:11px;color:var(--muted)}
+.kpi.warn b{color:var(--warn)}.kpi.acc b{color:var(--acc)}
 .card{background:var(--card);margin:10px 12px;padding:14px;border-radius:14px;border:1px solid var(--line)}
 .who{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap}.who b{font-size:16px}.who small,.muted{color:var(--muted);font-size:13px}
-.msg{background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0;white-space:pre-wrap;font-size:15px}
-.msg textarea{width:100%;border:0;background:transparent;font:inherit;color:inherit;resize:vertical;min-height:44px;display:block}
+.conv{background:var(--soft);border-radius:10px;padding:8px 10px;margin:8px 0;max-height:220px;overflow:auto}
+.h{margin:5px 0;padding:7px 10px;border-radius:10px;max-width:90%;white-space:pre-wrap;font-size:14px}
+.h.entrante{background:var(--card)}.h.red,.h.agente{background:#e8f3ec;margin-left:auto;color:#1f1f1f}.h.agente{background:#efe3e3}
+.h small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.msg{background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0;white-space:pre-wrap;font-size:15px;border-left:3px solid var(--acc)}
+.msg textarea{width:100%;border:0;background:transparent;font:inherit;color:inherit;resize:vertical;min-height:44px;display:block;outline:none}
 .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 button{flex:1;padding:12px;border-radius:12px;border:0;font:inherit;font-weight:600;background:var(--line);color:var(--ink);cursor:pointer}
-button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.5}
-.hist{max-height:260px;overflow:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
-.h{margin:6px 0;padding:8px 10px;border-radius:10px;max-width:88%;white-space:pre-wrap;font-size:14px}
-.h.entrante{background:var(--bg)}.h.red,.h.agente{background:#e8f3ec;margin-left:auto;color:#1f1f1f}.h.agente{background:#efe3e3}
-.h small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.5}button.sm{flex:0 0 auto;padding:8px 12px;font-size:13px;font-weight:500}
+.hist{max-height:280px;overflow:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
 .empty{color:var(--muted);text-align:center;padding:30px 16px}
-.pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}
+.pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}.pill.esc{background:#f3dede;color:#7a2e2e}.pill.ok{background:#e2f0e6;color:#2e7a4a}
 .sw{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
 .toast.on{opacity:1}
+.filtros{display:flex;gap:6px;margin:10px 12px 0;flex-wrap:wrap;align-items:center}
+.filtros input{flex:1;min-width:140px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+.chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;cursor:pointer}.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.since{font-size:12px;color:var(--warn)}
 </style>
 </head>
 <body>
 <header>
-  <h1>Vitral · Agente de WhatsApp</h1>
+  <h1>Vitral · Agente <small id="estadoTxt"></small></h1>
   <div class="tabs">
-    <div class="tab on" data-v="pend">Por aprobar<span class="badge" id="nPend">0</span></div>
-    <div class="tab" data-v="esc">Escalados<span class="badge" id="nEsc">0</span></div>
+    <div class="tab on" data-v="pend">Por aprobar<span class="badge zero" id="nPend">0</span></div>
+    <div class="tab" data-v="esc">Escalados<span class="badge zero" id="nEsc">0</span></div>
     <div class="tab" data-v="leads">Leads</div>
     <div class="tab" data-v="cfg">Ajustes</div>
   </div>
@@ -47,55 +56,99 @@ button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color
 <script>
 const T = new URLSearchParams(location.search).get('t');
 const API = 'https://prqfuhjtzymdayegmetk.supabase.co/functions/v1/panel';
-let S = null, vista = 'pend';
+let S = null, vista = 'pend', vistos = null, filtro = 'activos', busca = '';
+let sonido = localStorage.getItem('v_sonido') !== 'off';
 const $ = s => document.querySelector(s);
 const esc = s => (s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hora = iso => new Date(iso).toLocaleString('es-MX', {timeZone:'America/Mexico_City', weekday:'short', hour:'2-digit', minute:'2-digit'});
+const hace = iso => { const m=Math.round((Date.now()-new Date(iso))/60000); return m<1?'ahora':m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d'; };
 const seg = s => ({marca_personal:'Marca personal', familia:'Familia', book:'Book', otro:'Otro', desconocido:'—'})[s] ?? s;
+const est = s => ({nuevo:'nuevo', saludo:'saludo', precios:'recibió precios', experiencia:'experiencia', paquete:'eligió paquete', fecha:'viendo fecha', anticipo:'anticipo', cerrado:'cerrado ✔', perdido:'perdido', escalado:'escalado'})[s] ?? s;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
 async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
-function editando(){ const a=document.activeElement; if(a&&a.tagName==='TEXTAREA') return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
-async function cargar(f){ if(!f&&editando()){ return; } try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } render(); }
+function editando(){ const a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')) return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
+
+// Avisos: sonido + notificación del navegador cuando aparece algo nuevo
+function beep(){ if(!sonido) return; try{ const c=new (window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value=880; g.gain.setValueAtTime(0.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(0.3,c.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.5); o.start(); o.stop(c.currentTime+0.5); }catch(e){} }
+function notificar(titulo, cuerpo){ try{ if('Notification' in window && Notification.permission==='granted' && document.hidden){ const n=new Notification(titulo,{body:cuerpo,tag:'vitral-agente'}); n.onclick=()=>{window.focus(); n.close();}; } }catch(e){} }
+function avisar(){
+  const ahora = { p: new Set(S.pendientes.map(b=>b.id)), e: new Set(S.escalados.map(l=>l.id)) };
+  if(vistos){
+    const np=[...ahora.p].filter(x=>!vistos.p.has(x)).length, ne=[...ahora.e].filter(x=>!vistos.e.has(x)).length;
+    if(np||ne){ beep(); const partes=[]; if(np) partes.push(np+' por aprobar'); if(ne) partes.push(ne+' escalado'+(ne>1?'s':'')); notificar('Vitral · Agente', partes.join(' · ')); toast('Nuevo: '+partes.join(' · ')); }
+  }
+  vistos = ahora;
+}
+async function pedirPermiso(){ if(!('Notification' in window)) return toast('Este navegador no soporta notificaciones'); const p=await Notification.requestPermission(); toast(p==='granted'?'Notificaciones activadas':'No se activaron'); render(); }
+
+async function cargar(f){ if(!f&&editando()){ return; } try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); }
+
+function conv(ms){ if(!ms||!ms.length) return ''; return `<div class="conv">${ms.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')}</div>`; }
+
 function render(){
-  $('#nPend').textContent=S.pendientes.length; $('#nEsc').textContent=S.escalados.length;
-  document.title = (S.pendientes.length ? '('+S.pendientes.length+') ' : '') + 'Vitral · Agente';
+  const P=S.pendientes.length, E=S.escalados.length;
+  $('#nPend').textContent=P; $('#nPend').classList.toggle('zero',!P); $('#nEsc').textContent=E; $('#nEsc').classList.toggle('zero',!E);
+  document.title = ((P+E) ? '('+(P+E)+') ' : '') + 'Vitral · Agente';
+  $('#estadoTxt').textContent = S.agente_activo ? (S.modo==='auto'?'auto':'borrador') : 'apagado';
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===vista));
   const m=$('#main'); m.innerHTML='';
+  const k=S.tablero||{};
+  if(vista!=='cfg') m.insertAdjacentHTML('beforeend',`<div class="kpis">
+    <div class="kpi"><b>${k.leads_hoy??0}</b><span>leads hoy</span></div>
+    <div class="kpi"><b>${k.agente_hoy??0}</b><span>contestó el agente</span></div>
+    <div class="kpi acc"><b>${k.escalados??0}</b><span>escalados</span></div>
+    <div class="kpi warn"><b>${k.sin_respuesta??0}</b><span>sin respuesta +20 min</span></div></div>`);
   if(!S.agente_activo && vista!=='cfg') m.insertAdjacentHTML('beforeend','<div class="card muted">El agente está apagado. Los mensajes se guardan pero no se proponen respuestas. Enciéndelo en Ajustes.</div>');
+
   if(vista==='pend'){
-    if(!S.pendientes.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nada por aprobar 👌</div>');
+    if(!P) m.insertAdjacentHTML('beforeend','<div class="empty">Nada por aprobar 👌</div>');
     for(const b of S.pendientes){
       const l=b.leads||{};
       m.insertAdjacentHTML('beforeend',`<div class="card" id="b${b.id}">
-        <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${esc(l.telefono)} · ${seg(l.segmento)} · ${hora(b.creado_at)}</small></div>
-        <div class="muted">${esc(b.razonamiento||'')}</div>
+        <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${seg(l.segmento)} · <span class="since">hace ${hace(b.creado_at)}</span></small></div>
+        ${conv(S.historiales[b.lead_id])}
+        <div class="muted">Propuesta del agente · ${esc(b.razonamiento||'')}</div>
         ${b.mensajes.map((t,i)=>`<div class="msg"><textarea data-i="${i}" rows="${Math.min(12, t.split('\n').length+1)}">${esc(t)}</textarea></div>`).join('')}
-        <div class="row"><button class="ok" onclick="aprobar('${b.id}')">Enviar</button><button class="ghost" onclick="descartar('${b.id}')">Descartar</button><button class="ghost" onclick="verHist('${b.lead_id}','h${b.id}')">Chat</button></div>
-        <div class="hist" id="h${b.id}" hidden></div></div>`);
+        <div class="row"><button class="ok" onclick="aprobar('${b.id}')">Enviar</button><button class="ghost" onclick="descartar('${b.id}')">Descartar</button><a style="flex:0 0 auto" href="https://wa.me/${(l.telefono||'').replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a></div>
+      </div>`);
     }
   } else if(vista==='esc'){
-    if(!S.escalados.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nada escalado</div>');
+    if(!E) m.insertAdjacentHTML('beforeend','<div class="empty">Nada escalado</div>');
     for(const l of S.escalados){
       m.insertAdjacentHTML('beforeend',`<div class="card" id="e${l.id}">
-        <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${esc(l.telefono)} · ${seg(l.segmento)}</small></div>
-        <div><span class="pill">${esc(l.escalado_motivo||'fuera de guion')}</span> <small class="muted">${l.ultimo_entrante_at?hora(l.ultimo_entrante_at):''}</small></div>
-        <div class="muted" style="margin-top:6px">Contéstale desde tu WhatsApp. Cuando termines, decide qué hace el agente con este chat:</div>
-        <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="acc" style="width:100%">Abrir WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','he${l.id}')">Chat</button></div>
+        <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${seg(l.segmento)} · <span class="since">${l.ultimo_entrante_at?'hace '+hace(l.ultimo_entrante_at):''}</span></small></div>
+        <div><span class="pill esc">${esc(l.escalado_motivo||'fuera de guion')}</span></div>
+        ${conv(S.historiales[l.id])}
+        <div class="muted">Contéstale desde tu WhatsApp. Cuando termines, dime qué hace el agente con este chat:</div>
+        <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="acc" style="width:100%">Abrir WhatsApp</button></a></div>
         <div class="row"><button onclick="liberar('${l.id}','precios')">Devolver al agente</button><button class="ghost" onclick="cerrar('${l.id}','cerrado')">Cerrado ✔</button><button class="ghost" onclick="cerrar('${l.id}','perdido')">Perdido</button></div>
-        <div class="hist" id="he${l.id}" hidden></div></div>`);
+      </div>`);
     }
   } else if(vista==='leads'){
-    if(!S.leads.length) m.insertAdjacentHTML('beforeend','<div class="empty">Todavía no hay leads</div>');
-    for(const l of S.leads){
-      m.insertAdjacentHTML('beforeend',`<div class="card"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?hora(l.ultimo_entrante_at):''}</small></div>
-        <div><span class="pill">${esc(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> <small class="muted">${esc(l.telefono)}</small></div>
+    m.insertAdjacentHTML('beforeend',`<div class="filtros"><input id="busca" placeholder="Buscar nombre o teléfono" value="${esc(busca)}" oninput="busca=this.value;render();$('#busca').focus();$('#busca').setSelectionRange(9999,9999)">
+      ${[['activos','Activos'],['todos','Todos'],['escalado','Escalados'],['cerrado','Cerrados'],['perdido','Perdidos']].map(([k,v])=>`<span class="chip ${filtro===k?'on':''}" onclick="filtro='${k}';render()">${v}</span>`).join('')}</div>`);
+    const q=busca.trim().toLowerCase();
+    const lista=S.leads.filter(l=>{
+      if(filtro==='activos' && ['cerrado','perdido'].includes(l.estado)) return false;
+      if(['escalado','cerrado','perdido'].includes(filtro) && l.estado!==filtro) return false;
+      if(q && !((l.nombre||'').toLowerCase().includes(q) || (l.telefono||'').includes(q))) return false;
+      return true;
+    });
+    if(!lista.length) m.insertAdjacentHTML('beforeend','<div class="empty">Sin leads con ese filtro</div>');
+    for(const l of lista){
+      const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
+      m.insertAdjacentHTML('beforeend',`<div class="card"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
+        <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${quien?`<span class="pill">última respuesta: ${quien}</span>`:''} <small class="muted">${esc(l.telefono)}</small></div>
         <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')">Pedir propuesta</button></div>
         <div class="hist" id="hl${l.id}" hidden></div></div>`);
     }
   } else {
+    const perm = ('Notification' in window) ? Notification.permission : 'no';
     m.insertAdjacentHTML('beforeend',`<div class="card"><div class="sw"><div><b>Agente encendido</b><div class="muted">Si está apagado, solo guarda los mensajes.</div></div><button style="flex:0 0 auto" class="${S.agente_activo?'ok':''}" onclick="activo(${!S.agente_activo})">${S.agente_activo?'Encendido':'Apagado'}</button></div></div>
       <div class="card"><div class="sw"><div><b>Modo</b><div class="muted">Borrador: te propone y tú apruebas. Auto: contesta solo lo que tiene guion.</div></div><button style="flex:0 0 auto" class="${S.modo==='auto'?'acc':''}" onclick="modo('${S.modo==='auto'?'borrador':'auto'}')">${S.modo==='auto'?'Auto':'Borrador'}</button></div></div>
-      <div class="card muted">Los precios, el anticipo y la ventana de 30 min viven en la configuración del agente. Pídele a Claude cualquier cambio.</div>`);
+      <div class="card"><div class="sw"><div><b>Sonido</b><div class="muted">Un tono cuando aparece algo por aprobar o escalado (con la página abierta).</div></div><button style="flex:0 0 auto" class="${sonido?'ok':''}" onclick="sonido=!sonido;localStorage.setItem('v_sonido',sonido?'on':'off');beep();render()">${sonido?'Activado':'Apagado'}</button></div></div>
+      <div class="card"><div class="sw"><div><b>Notificaciones del navegador</b><div class="muted">Aviso aunque estés en otra pestaña o app. Estado: ${perm==='granted'?'activadas':perm==='denied'?'bloqueadas en el navegador':'sin activar'}</div></div>${perm==='granted'?'':`<button style="flex:0 0 auto" onclick="pedirPermiso()">Activar</button>`}</div></div>
+      <div class="card muted">Hoy: ${S.tablero.leads_hoy??0} leads · el agente contestó a ${S.tablero.agente_hoy??0} · tú a ${S.tablero.red_hoy??0}.<br>Los precios, el anticipo y la ventana de 30 min los cambia Claude.</div>`);
   }
 }
 async function aprobar(id){
@@ -105,7 +158,7 @@ async function aprobar(id){
   if(r.ok){toast(r.editado?'Enviado con tus cambios':'Enviado');}else{toast('Error: '+(r.error||'?'));btns.forEach(b=>b.disabled=false);return}
   cargar(true);
 }
-async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); vista='pend'; cargar(true); }
+async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
 async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(true); }
 async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(true); }
 async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(true); }
@@ -116,11 +169,11 @@ async function verHist(lead_id,id){
   if(!el.hidden){el.hidden=true;return}
   el.hidden=false; el.innerHTML='<div class="muted">Cargando…</div>';
   const h=await api('historial',{lead_id});
-  el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Red':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
+  el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+m.tipo+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
   el.scrollTop=el.scrollHeight;
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v;render()});
-cargar(true); setInterval(()=>cargar(), 20000);
+cargar(true); setInterval(()=>cargar(), 15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)cargar()});
 </script>
 </body>
