@@ -106,7 +106,7 @@ function tarjetaLead(l){
   const sr=sinRespuesta(l), ab=abierta(l.ultimo_entrante_at);
   const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
   return `<div class="card ${sr?'alerta':''}"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
-    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
+    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.nuevo_hoy?'<span class="pill ok">nuevo hoy</span>':''} ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
     ${l.notas?`<div class="aviso">Nota: ${esc(l.notas)}</div>`:''}
     <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')" ${ab?'':'disabled'}>Pedir propuesta</button><button class="ghost" onclick="editarNota('${l.id}')">Nota</button></div>
     <div class="hist" id="hl${l.id}" hidden></div></div>`;
@@ -115,7 +115,7 @@ function listaLeads(){
   const q=busca.trim().toLowerCase();
   return S.leads.filter(l=>{
     if(filtro==='activos' && ['cerrado','perdido'].includes(l.estado)) return false;
-    if(filtro==='leads_hoy' && !esHoy(l.ultimo_entrante_at)) return false;
+    if(filtro==='leads_hoy' && !l.nuevo_hoy) return false;
     if(filtro==='agente_hoy' && !esHoy(l.ultima_respuesta_agente_at)) return false;
     if(filtro==='sin_respuesta' && !sinRespuesta(l)) return false;
     if(['escalado','cerrado','perdido'].includes(filtro) && l.estado!==filtro) return false;
@@ -137,7 +137,7 @@ function render(){
   const k=S.tablero||{};
   const sel = f => ((vista==='leads'&&filtro===f)||(vista==='esc'&&f==='escalados')||(vista==='seg'&&f==='segundo_toque')) ? 'on' : '';
   if(!['cfg','num'].includes(vista)) m.insertAdjacentHTML('beforeend',`<div class="kpis">
-    <div class="kpi ${sel('leads_hoy')}" onclick="verKpi('leads_hoy')"><b>${k.leads_hoy??0}</b><span>leads hoy</span></div>
+    <div class="kpi ${sel('leads_hoy')}" onclick="verKpi('leads_hoy')"><b>${k.leads_hoy??0}</b><span>leads nuevos hoy</span></div>
     <div class="kpi ${sel('agente_hoy')}" onclick="verKpi('agente_hoy')"><b>${k.agente_hoy??0}</b><span>contestó el agente</span></div>
     <div class="kpi acc ${sel('escalados')}" onclick="verKpi('escalados')"><b>${k.escalados??0}</b><span>escalados</span></div>
     <div class="kpi warn ${sel('sin_respuesta')}" onclick="verKpi('sin_respuesta')"><b>${k.sin_respuesta??0}</b><span>sin respuesta</span></div>
@@ -187,7 +187,7 @@ function render(){
         <div class="hist" id="hs${l.id}" hidden></div></div>`);
     }
   } else if(vista==='leads'){
-    const chips=[['activos','Activos'],['leads_hoy','Hoy'],['sin_respuesta','Sin respuesta'],['agente_hoy','Contestó el agente'],['escalado','Escalados'],['todos','Todos'],['cerrado','Cerrados'],['perdido','Perdidos']];
+    const chips=[['activos','Activos'],['leads_hoy','Nuevos hoy'],['sin_respuesta','Sin respuesta'],['agente_hoy','Contestó el agente'],['escalado','Escalados'],['todos','Todos'],['cerrado','Cerrados'],['perdido','Perdidos']];
     m.insertAdjacentHTML('beforeend',`<div class="filtros"><input id="busca" placeholder="Buscar nombre o teléfono" value="${esc(busca)}">
       ${chips.map(([kk,v])=>`<span class="chip ${filtro===kk?'on':''}" onclick="filtro='${kk}';render()">${v}</span>`).join('')}</div><div id="lista"></div>`);
     const inp=$('#busca'); inp.oninput=()=>{ busca=inp.value; renderLista(); };
