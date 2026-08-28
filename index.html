@@ -108,7 +108,7 @@ function tarjetaLead(l){
   const sr=sinRespuesta(l), ab=abierta(l.ultimo_entrante_at);
   const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
   return `<div class="card ${sr?'alerta':''}"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
-    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.nuevo_hoy?'<span class="pill ok">nuevo hoy</span>':''} ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
+    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.nuevo_hoy?'<span class="pill ok">nuevo hoy</span>':''} ${l.volvio_por_anuncio?'<span class="pill warn">volvió por el anuncio</span>':''} ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
     ${l.notas?`<div class="aviso">Nota: ${esc(l.notas)}</div>`:''}
     <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')" ${ab?'':'disabled'}>Pedir propuesta</button><button class="ghost" onclick="editarNota('${l.id}')">Nota</button><button class="ghost" onclick="dictar('${l.id}')">Pegar mensaje</button></div>
     <div class="hist" id="hl${l.id}" hidden></div></div>`;
@@ -178,13 +178,13 @@ function render(){
     }
   } else if(vista==='seg'){
     const lista=S.segundoToque||[];
-    m.insertAdjacentHTML('beforeend','<div class="card muted">Clientes que recibieron respuesta y se quedaron callados. El segundo toque es el grupo que mejor convierte.<br><br><b>Dentro de las 24 h:</b> "Proponer mensaje" y el agente te escribe un seguimiento a medida.<br><b>Pasadas las 24 h:</b> "Mandar seguimiento" manda la plantilla aprobada por Meta, con botones. Si toca un botón se reabre el chat y el agente sigue solo.</div>');
+    m.insertAdjacentHTML('beforeend','<div class="card muted">Aparecen a las <b>18 h</b> de callados, o antes si <b>volvieron a entrar por el anuncio</b> — esa es la mejor señal de interés y van primero.<br><br><b>Dentro de las 24 h:</b> "Proponer mensaje" y el agente escribe un seguimiento a medida. Gratis.<br><b>Pasadas las 24 h:</b> "Mandar seguimiento" manda la plantilla aprobada por Meta, con botones. Si toca uno se reabre el chat y el agente sigue solo.</div>');
     if(!lista.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nadie pendiente de seguimiento</div>');
     for(const l of lista){
       const h=Math.round(l.horas_silencio);
-      m.insertAdjacentHTML('beforeend',`<div class="card ${l.ventana_abierta?'':'cerrada'}">
+      m.insertAdjacentHTML('beforeend',`<div class="card ${l.volvio_por_anuncio?'alerta':''} ${l.ventana_abierta?'':'cerrada'}">
         <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>callado hace ${h} h</small></div>
-        <div><span class="pill">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.paquete?`<span class="pill ok">${l.paquete}</span>`:''} ${l.ventana_abierta?`<span class="pill warn">quedan ${Math.max(0,24-h)} h</span>`:'<span class="pill warn">ventana cerrada</span>'}</div>
+        <div>${l.volvio_por_anuncio?'<span class="pill warn">volvió por el anuncio</span> ':''}<span class="pill">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.paquete?`<span class="pill ok">${l.paquete}</span>`:''} ${l.ventana_abierta?`<span class="pill warn">quedan ${Math.max(0,24-h)} h</span>`:'<span class="pill warn">ventana cerrada</span>'}</div>
         <div class="row">${l.ventana_abierta?`<button class="acc" onclick="segundoToque('${l.id}')">Proponer mensaje</button>`:`<button class="acc" onclick="seguirPlantilla('${l.id}')">Mandar seguimiento</button>`}<a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hs${l.id}')">Chat</button></div>
         <div class="hist" id="hs${l.id}" hidden></div></div>`);
     }
@@ -225,6 +225,11 @@ async function verReporte(dias){
       ${fila('Descartadas', a.descartados??0)}
       ${fila('Te las escaló', a.escalados??0)}
     </table><div class="muted" style="margin-top:8px">Cuando "editadas" baje a casi cero, es momento de pasar a modo Auto.</div></div>
+    <div class="card"><b>Segundo toque</b><table>
+      ${fila('Seguimientos enviados', (R.seguimiento||{}).enviados??0)}
+      ${fila('Contestaron', (R.seguimiento||{}).contestaron??0)}
+      ${fila('% que contestó', (R.seguimiento||{}).pct==null?'—':(R.seguimiento.pct+'%'))}
+    </table><div class="muted" style="margin-top:8px">Con esto decidimos si 18 h es la espera correcta. Si el % es bajo, movemos el momento.</div></div>
     <div class="card"><b>Por tipo de sesión</b><table>${Object.entries(segs).map(([k,v])=>fila(({marca_personal:'Marca personal',familia:'Familia',book:'Book',otro:'Otro',desconocido:'Sin clasificar'})[k]||k, v)).join('')||'<tr><td class="muted">Sin datos</td><td></td></tr>'}</table></div>
     <div class="card"><b>Por qué te escala</b><table>${Object.entries(mot).map(([k,v])=>fila(esc(k), v)).join('')||'<tr><td class="muted">Nada escalado</td><td></td></tr>'}</table></div>`;
 }
