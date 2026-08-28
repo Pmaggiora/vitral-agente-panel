@@ -218,7 +218,7 @@ async function verReporte(dias){
       ${fila('Eligieron paquete', R.eligio_paquete??0)}
       ${fila('Cerrados', R.cerrados??0)}
       ${fila('Perdidos', R.perdidos??0)}
-    </table></div>
+    </table><div class="muted" style="margin-top:8px">Solo cuenta a quien te escribió primero. Los otros ${R.otros_chats??0} chats del período son conversaciones que empezaste tú o clientes de antes, y no entran en el embudo.</div></div>
     <div class="card"><b>El agente</b><table>
       ${fila('Respuestas enviadas tal cual', a.enviados??0)}
       ${fila('Respuestas que editaste', a.editados??0)}
