@@ -95,8 +95,10 @@ function avisar(){
   vistos = ahora;
 }
 async function pedirPermiso(){ if(!('Notification' in window)) return toast('Este navegador no soporta notificaciones'); const p=await Notification.requestPermission(); toast(p==='granted'?'Notificaciones activadas':'No se activaron'); render(); }
-async function cargar(f){ if(!f&&editando()) return; try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); }
-function conv(ms){ if(!ms||!ms.length) return ''; return `<div class="conv">${ms.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+(m.tipo==='image'?'foto':m.tipo)+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')}</div>`; }
+let ultBarrido = 0;
+async function barrer(){ if(Date.now()-ultBarrido < 180000) return; ultBarrido = Date.now(); try{ const r = await api('barrer'); if(r && r.revisados) cargar(true); }catch(e){} }
+async function cargar(f){ if(!f&&editando()) return; try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); barrer(); }
+function conv(ms){ if(!ms||!ms.length) return ''; return `<div class="conv">${ms.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+(m.tipo==='image'?'foto':m.tipo==='unsupported'?'mensaje que no se pudo leer':m.tipo)+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')}</div>`; }
 function verKpi(k){
   if(k==='escalados'){ vista='esc'; render(); return; }
   if(k==='segundo_toque'){ vista='seg'; render(); return; }
@@ -251,7 +253,7 @@ async function verHist(lead_id,id){
   if(!el.hidden){el.hidden=true;return}
   el.hidden=false; el.innerHTML='<div class="muted">Cargando…</div>';
   const h=await api('historial',{lead_id});
-  el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+(m.tipo==='image'?'foto':m.tipo)+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
+  el.innerHTML=h.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+(m.tipo==='image'?'foto':m.tipo==='unsupported'?'mensaje que no se pudo leer':m.tipo)+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')||'<div class="muted">Sin mensajes</div>';
   el.scrollTop=el.scrollHeight;
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v; render()});
