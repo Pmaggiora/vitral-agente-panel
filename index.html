@@ -159,7 +159,7 @@ function render(){
         <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${seg(l.segmento)} · <span class="since">hace ${hace(b.creado_at)}</span></small></div>
         ${conv(S.historiales[b.lead_id])}
         <div class="muted">${b.motivo==='segundo toque'?'<b>Segundo toque</b> · ':''}${esc(b.razonamiento||'')}</div>
-        ${ab?'':'<div class="aviso">Pasaron más de 24 h desde su último mensaje. WhatsApp ya no deja escribirle libremente: contéstale desde tu WhatsApp o espera a que él escriba.</div>'}
+        ${ab?'':'<div class="aviso">Pasaron más de 24 h desde su último mensaje. WhatsApp ya no deja escribirle libremente: usa Seguimiento para mandarle la plantilla, o contéstale desde tu WhatsApp.</div>'}
         ${b.mensajes.map((t,i)=>`<div class="msg"><textarea data-i="${i}" rows="${Math.min(12, t.split('\n').length+1)}">${esc(t)}</textarea></div>`).join('')}
         <div class="row"><button class="ok" onclick="aprobar('${b.id}')" ${ab?'':'disabled'}>Enviar</button><button class="ghost" onclick="descartar('${b.id}')">Descartar</button><button class="ghost" onclick="dictar('${b.lead_id}')">Pegar mensaje</button><a style="flex:0 0 auto" href="https://wa.me/${(l.telefono||'').replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a></div>
       </div>`);
@@ -178,14 +178,14 @@ function render(){
     }
   } else if(vista==='seg'){
     const lista=S.segundoToque||[];
-    m.insertAdjacentHTML('beforeend','<div class="card muted">Clientes que recibieron respuesta y se quedaron callados. El segundo toque es el grupo que mejor convierte. Ojo: solo se puede escribir libre dentro de las 24 h desde su último mensaje.</div>');
+    m.insertAdjacentHTML('beforeend','<div class="card muted">Clientes que recibieron respuesta y se quedaron callados. El segundo toque es el grupo que mejor convierte.<br><br><b>Dentro de las 24 h:</b> "Proponer mensaje" y el agente te escribe un seguimiento a medida.<br><b>Pasadas las 24 h:</b> "Mandar seguimiento" manda la plantilla aprobada por Meta, con botones. Si toca un botón se reabre el chat y el agente sigue solo.</div>');
     if(!lista.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nadie pendiente de seguimiento</div>');
     for(const l of lista){
       const h=Math.round(l.horas_silencio);
       m.insertAdjacentHTML('beforeend',`<div class="card ${l.ventana_abierta?'':'cerrada'}">
         <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>callado hace ${h} h</small></div>
         <div><span class="pill">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.paquete?`<span class="pill ok">${l.paquete}</span>`:''} ${l.ventana_abierta?`<span class="pill warn">quedan ${Math.max(0,24-h)} h</span>`:'<span class="pill warn">ventana cerrada</span>'}</div>
-        <div class="row"><button class="acc" onclick="segundoToque('${l.id}')" ${l.ventana_abierta?'':'disabled'}>Proponer mensaje</button><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hs${l.id}')">Chat</button></div>
+        <div class="row">${l.ventana_abierta?`<button class="acc" onclick="segundoToque('${l.id}')">Proponer mensaje</button>`:`<button class="acc" onclick="seguirPlantilla('${l.id}')">Mandar seguimiento</button>`}<a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hs${l.id}')">Chat</button></div>
         <div class="hist" id="hs${l.id}" hidden></div></div>`);
     }
   } else if(vista==='leads'){
@@ -237,6 +237,26 @@ async function aprobar(id){
 }
 async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
 async function segundoToque(lead_id){ toast('Escribiendo el seguimiento…'); const r=await api('segundo_toque',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Listo, revísalo en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
+function primerNombre(n){
+  if(!n) return '';
+  const limpio=String(n).replace(/[^\p{L}\p{M}\s'.-]/gu,'').trim();
+  const x=(limpio.split(/\s+/)[0]||'').replace(/^[.'-]+|[.'-]+$/g,'');
+  return /^\p{L}{3,}$/u.test(x) ? x : '';
+}
+const TXT_SEG = n => n
+  ? 'Hola '+n+', te escribimos de Vitral Estudio. Hace unos días te pasamos los precios de la sesión y quedamos pendientes. Esta semana todavía tenemos lugares, si quieres te apartamos uno.'
+  : 'Hola! Te escribimos de Vitral Estudio. Hace unos días te pasamos los precios de la sesión y quedamos pendientes. Esta semana todavía tenemos lugares, si quieres te apartamos uno.';
+async function seguirPlantilla(lead_id){
+  const l=(S.segundoToque||[]).find(x=>x.id===lead_id)||{};
+  const n=prompt('Nombre con el que lo saludamos. Dejalo vacío si no sabes cómo se llama.', primerNombre(l.nombre));
+  if(n===null) return;
+  const nom=n.trim();
+  if(!confirm('Se le manda ahora, tal cual:\n\n'+TXT_SEG(nom)+'\n\nCon los botones "Sí, me interesa" y "Ahora no".')) return;
+  toast('Enviando…');
+  const r=await api('plantilla',{lead_id, name: nom?'seguimiento_cotizacion':'seguimiento_cotizacion_sn', params: nom?[nom]:[]});
+  toast(r.ok?'Seguimiento enviado':(r.error||'Error'));
+  cargar(true);
+}
 async function dictar(lead_id){
   const t=prompt('Escribe o pega lo que dice el mensaje del cliente. Sirve para audios o para mensajes que llegaron incompletos. El agente responde a eso.');
   if(t===null||!t.trim()) return;
