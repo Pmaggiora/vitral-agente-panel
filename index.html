@@ -13,7 +13,7 @@
 header{position:sticky;top:0;background:var(--bg);padding:12px 14px 8px;border-bottom:1px solid var(--line);z-index:2}
 h1{font-size:17px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
 h1 small{font-size:12px;color:var(--muted);font-weight:normal}
-.tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}.tab{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;cursor:pointer}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}.tab{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;cursor:pointer;flex:0 0 auto}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px;text-align:center;margin-left:4px}.tab.on .badge{background:#fff;color:var(--acc)}.badge.zero{display:none}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px;margin:10px 12px 0}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:.15s}
