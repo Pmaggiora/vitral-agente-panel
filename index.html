@@ -98,6 +98,17 @@ async function pedirPermiso(){ if(!('Notification' in window)) return toast('Est
 let ultBarrido = 0;
 async function barrer(){ if(Date.now()-ultBarrido < 180000) return; ultBarrido = Date.now(); try{ const r = await api('barrer'); if(r && r.revisados) cargar(true); }catch(e){} }
 async function cargar(f){ if(!f&&editando()) return; try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); barrer(); }
+function sinLeer(ms){
+  if(!ms||!ms.length) return false;
+  let i=ms.length-1; while(i>=0 && ms[i].direccion==='entrante') i--;
+  const ent=ms.slice(i+1);
+  return ent.some((m,j)=>m.tipo==='unsupported' && !ent.slice(j+1).some(n=>n.tipo==='image' && new Date(n.creado_at)-new Date(m.creado_at)<90000));
+}
+function avisoSinLeer(lead_id){
+  return `<div class="aviso"><b>Un mensaje del cliente llegó vacío al agente</b> (a ti te aparece bien en WhatsApp: es una limitación de Meta con el primer mensaje). Cópialo y pégalo aquí y el agente rehace la propuesta con lo que dijo de verdad:
+    <textarea id="sl${lead_id}" rows="2" placeholder="Pega aquí lo que escribió el cliente" style="width:100%;margin-top:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;resize:vertical"></textarea>
+    <div class="row" style="margin-top:8px"><button class="acc" onclick="dictarDesde('${lead_id}')">Rehacer propuesta</button><a style="flex:0 0 auto" href="whatsapp://"><button class="ghost" style="width:100%">Ir a WhatsApp</button></a></div></div>`;
+}
 function conv(ms){ if(!ms||!ms.length) return ''; return `<div class="conv">${ms.map(m=>`<div class="h ${m.direccion}">${esc(m.texto||'['+(m.tipo==='image'?'foto':m.tipo==='unsupported'?'mensaje que no llegó completo':m.tipo)+']')}<small>${m.direccion==='entrante'?'Cliente':m.direccion==='red'?'Tú':'Agente'} · ${hora(m.creado_at)}</small></div>`).join('')}</div>`; }
 function verKpi(k){
   if(k==='escalados'){ vista='esc'; render(); return; }
@@ -160,6 +171,7 @@ function render(){
         ${conv(S.historiales[b.lead_id])}
         <div class="muted">${b.motivo==='segundo toque'?'<b>Segundo toque</b> · ':''}${esc(b.razonamiento||'')}</div>
         ${ab?'':'<div class="aviso">Pasaron más de 24 h desde su último mensaje. WhatsApp ya no deja escribirle libremente: usa Seguimiento para mandarle la plantilla, o contéstale desde tu WhatsApp.</div>'}
+        ${sinLeer(S.historiales[b.lead_id])?avisoSinLeer(b.lead_id):''}
         ${b.mensajes.map((t,i)=>`<div class="msg"><textarea data-i="${i}" rows="${Math.min(12, t.split('\n').length+1)}">${esc(t)}</textarea></div>`).join('')}
         <div class="row"><button class="ok" onclick="aprobar('${b.id}')" ${ab?'':'disabled'}>Enviar</button><button class="ghost" onclick="descartar('${b.id}')">Descartar</button><button class="ghost" onclick="dictar('${b.lead_id}')">Pegar mensaje</button><a style="flex:0 0 auto" href="https://wa.me/${(l.telefono||'').replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a></div>
       </div>`);
@@ -171,6 +183,7 @@ function render(){
         <div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${seg(l.segmento)} · <span class="since">${l.ultimo_entrante_at?'hace '+hace(l.ultimo_entrante_at):''}</span></small></div>
         <div><span class="pill esc">${esc(l.escalado_motivo||'fuera de guion')}</span></div>
         ${conv(S.historiales[l.id])}
+        ${sinLeer(S.historiales[l.id])?avisoSinLeer(l.id):''}
         <div class="muted">Contéstale desde tu WhatsApp. O pégale aquí lo que dice y el agente te arma la respuesta:</div>
         <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="acc" style="width:100%">Abrir WhatsApp</button></a><button class="ghost" onclick="dictar('${l.id}')">Pegar mensaje</button></div>
         <div class="row"><button onclick="liberar('${l.id}','precios')">Devolver al agente</button><button class="ghost" onclick="cerrar('${l.id}','cerrado')">Cerrado ✔</button><button class="ghost" onclick="cerrar('${l.id}','perdido')">Perdido</button></div>
@@ -260,6 +273,16 @@ async function seguirPlantilla(lead_id){
   toast('Enviando…');
   const r=await api('plantilla',{lead_id, name: nom?'seguimiento_cotizacion':'seguimiento_cotizacion_sn', params: nom?[nom]:[]});
   toast(r.ok?'Seguimiento enviado':(r.error||'Error'));
+  cargar(true);
+}
+async function dictarDesde(lead_id){
+  const el=document.getElementById('sl'+lead_id); const t=el?el.value.trim():'';
+  if(!t){ toast('Primero pega lo que escribió el cliente'); return; }
+  el.value=''; el.defaultValue='';
+  toast('Pensando la respuesta…');
+  const r=await api('dictar',{lead_id,texto:t}); const x=r.resultado||r||{};
+  toast(x.borrador?'Propuesta rehecha':x.escalado?'Escalado: '+x.escalado:x.error||x.skip||'Listo');
+  if(x.borrador) vista='pend';
   cargar(true);
 }
 async function dictar(lead_id){
