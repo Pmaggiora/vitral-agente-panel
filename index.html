@@ -38,7 +38,7 @@ button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color
 .pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}.pill.esc{background:#f3dede;color:#7a2e2e}.pill.ok{background:#e2f0e6;color:#2e7a4a}.pill.warn{background:#f6e6d6;color:#8a4a10}
 .sw{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:9;max-width:90%;text-align:center}
-.toast.on{opacity:1}
+.toast.on{opacity:1;pointer-events:auto}.toast button{flex:0 0 auto;margin-left:10px;padding:4px 12px;border-radius:999px;background:var(--bg);color:var(--ink);font-size:13px}
 .filtros{display:flex;gap:6px;margin:10px 12px 0;flex-wrap:wrap;align-items:center}
 .filtros input{flex:1;min-width:150px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
 .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;cursor:pointer}.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -75,7 +75,8 @@ const est = s => ({nuevo:'nuevo', saludo:'saludo', precios:'recibió precios', e
 const diaMX = d => new Date(d).toLocaleDateString('en-CA', {timeZone:'America/Mexico_City'});
 const esHoy = d => d && diaMX(d) === diaMX(Date.now());
 const abierta = ue => ue && (Date.now()-new Date(ue)) < H24;
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),3200)}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),3200)}
+function toastDeshacer(t,fn){const e=$('#toast');e.innerHTML=esc(t)+'<button>Deshacer</button>';e.querySelector('button').onclick=()=>{e.classList.remove('on');fn()};e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),7000)}
 async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
 function editando(){ const a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')) return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
 function sinRespuesta(l){
@@ -96,7 +97,7 @@ function avisar(){
 }
 async function pedirPermiso(){ if(!('Notification' in window)) return toast('Este navegador no soporta notificaciones'); const p=await Notification.requestPermission(); toast(p==='granted'?'Notificaciones activadas':'No se activaron'); render(); }
 let ultBarrido = 0;
-async function barrer(){ if(Date.now()-ultBarrido < 180000) return; ultBarrido = Date.now(); try{ const r = await api('barrer'); if(r && r.revisados) cargar(true); }catch(e){} }
+async function barrer(){ if(Date.now()-ultBarrido < 600000) return; ultBarrido = Date.now(); try{ const r = await api('barrer'); if(r && r.revisados) cargar(true); }catch(e){} }
 async function cargar(f){ if(!f&&editando()) return; try{ S = await api('estado'); }catch(e){ $('#main').innerHTML='<div class="empty">'+(e.message==='token'?'Enlace inválido. Usa el enlace completo que te dio Claude.':'Sin conexión. Reintentando…')+'</div>'; return } avisar(); render(); barrer(); }
 function sinLeer(ms){
   if(!ms||!ms.length) return false;
@@ -119,14 +120,16 @@ function tarjetaLead(l){
   const sr=sinRespuesta(l), ab=abierta(l.ultimo_entrante_at);
   const quien = l.ultima_respuesta_agente_at||l.ultima_respuesta_red_at ? (new Date(l.ultima_respuesta_agente_at||0) > new Date(l.ultima_respuesta_red_at||0) ? 'agente' : 'tú') : null;
   return `<div class="card ${sr?'alerta':''}"><div class="who"><b>${esc(l.nombre||'Sin nombre')}</b><small>${l.ultimo_entrante_at?'escribió hace '+hace(l.ultimo_entrante_at):''}</small></div>
-    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.nuevo_hoy?'<span class="pill ok">nuevo hoy</span>':''} ${l.volvio_por_anuncio?'<span class="pill warn">volvió por el anuncio</span>':''} ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
+    <div><span class="pill ${l.estado==='escalado'?'esc':l.estado==='cerrado'?'ok':''}">${est(l.estado)}</span> <span class="pill">${seg(l.segmento)}</span> ${l.nuevo_hoy?'<span class="pill ok">nuevo hoy</span>':''} ${l.volvio_por_anuncio?'<span class="pill warn">volvió por el anuncio</span>':''} ${sr?'<span class="pill warn">sin respuesta</span>':quien?`<span class="pill">última: ${quien}</span>`:''} ${!ab&&l.ultimo_entrante_at?'<span class="pill warn">ventana cerrada</span>':''} ${l.ignorado?'<span class="pill">no es lead</span>':''} <small class="muted">${esc(l.telefono)}</small></div>
     ${l.notas?`<div class="aviso">Nota: ${esc(l.notas)}</div>`:''}
-    <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')" ${ab?'':'disabled'}>Pedir propuesta</button><button class="ghost" onclick="editarNota('${l.id}')">Nota</button><button class="ghost" onclick="dictar('${l.id}')">Pegar mensaje</button></div>
+    <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="ghost" style="width:100%">WhatsApp</button></a><button class="ghost" onclick="verHist('${l.id}','hl${l.id}')">Chat</button><button class="ghost" onclick="generar('${l.id}')" ${ab?'':'disabled'}>Pedir propuesta</button><button class="ghost" onclick="editarNota('${l.id}')">Nota</button><button class="ghost" onclick="dictar('${l.id}')">Pegar mensaje</button><button class="ghost" onclick="ignorar('${l.id}',${!l.ignorado})">${l.ignorado?'Sí es lead':'No es lead'}</button></div>
     <div class="hist" id="hl${l.id}" hidden></div></div>`;
 }
 function listaLeads(){
   const q=busca.trim().toLowerCase();
   return S.leads.filter(l=>{
+    if(filtro==='ignorados') { if(!l.ignorado) return false; }
+    else if(l.ignorado && filtro!=='todos') return false;
     if(filtro==='activos' && ['cerrado','perdido'].includes(l.estado)) return false;
     if(filtro==='leads_hoy' && !l.nuevo_hoy) return false;
     if(filtro==='agente_hoy' && !esHoy(l.ultima_respuesta_agente_at)) return false;
@@ -144,7 +147,7 @@ function render(){
   $('#nEsc').textContent=E; $('#nEsc').classList.toggle('zero',!E);
   $('#nSeg').textContent=G; $('#nSeg').classList.toggle('zero',!G);
   document.title = ((P+E) ? '('+(P+E)+') ' : '') + 'Vitral · Agente';
-  $('#estadoTxt').textContent = S.agente_activo ? (S.modo==='auto'?'auto':'borrador') : 'apagado';
+  $('#estadoTxt').textContent = S.agente_activo ? ({auto:'auto',inicio:'inicio automático'}[S.modo]||'borrador') : 'apagado';
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===vista));
   const m=$('#main'); m.innerHTML='';
   const k=S.tablero||{};
@@ -186,7 +189,7 @@ function render(){
         ${sinLeer(S.historiales[l.id])?avisoSinLeer(l.id):''}
         <div class="muted">Contéstale desde tu WhatsApp. O pégale aquí lo que dice y el agente te arma la respuesta:</div>
         <div class="row"><a style="flex:1" href="https://wa.me/${l.telefono.replace('+','')}"><button class="acc" style="width:100%">Abrir WhatsApp</button></a><button class="ghost" onclick="dictar('${l.id}')">Pegar mensaje</button></div>
-        <div class="row"><button onclick="liberar('${l.id}','precios')">Devolver al agente</button><button class="ghost" onclick="cerrar('${l.id}','cerrado')">Cerrado ✔</button><button class="ghost" onclick="cerrar('${l.id}','perdido')">Perdido</button></div>
+        <div class="row"><button onclick="liberar('${l.id}','precios')">Devolver al agente</button><button class="ghost" onclick="cerrar('${l.id}','cerrado')">Cerrado ✔</button><button class="ghost" onclick="cerrar('${l.id}','perdido')">Perdido</button><button class="ghost" onclick="ignorar('${l.id}')">No es lead</button></div>
       </div>`);
     }
   } else if(vista==='seg'){
@@ -202,7 +205,7 @@ function render(){
         <div class="hist" id="hs${l.id}" hidden></div></div>`);
     }
   } else if(vista==='leads'){
-    const chips=[['activos','Activos'],['leads_hoy','Nuevos hoy'],['sin_respuesta','Sin respuesta'],['agente_hoy','Contestó el agente'],['escalado','Escalados'],['todos','Todos'],['cerrado','Cerrados'],['perdido','Perdidos']];
+    const chips=[['activos','Activos'],['leads_hoy','Nuevos hoy'],['sin_respuesta','Sin respuesta'],['agente_hoy','Contestó el agente'],['escalado','Escalados'],['todos','Todos'],['cerrado','Cerrados'],['perdido','Perdidos'],['ignorados','No son leads']];
     m.insertAdjacentHTML('beforeend',`<div class="filtros"><input id="busca" placeholder="Buscar nombre o teléfono" value="${esc(busca)}">
       ${chips.map(([kk,v])=>`<span class="chip ${filtro===kk?'on':''}" onclick="filtro='${kk}';render()">${v}</span>`).join('')}</div><div id="lista"></div>`);
     const inp=$('#busca'); inp.oninput=()=>{ busca=inp.value; renderLista(); };
@@ -213,7 +216,8 @@ function render(){
   } else {
     const perm = ('Notification' in window) ? Notification.permission : 'no';
     m.insertAdjacentHTML('beforeend',`<div class="card"><div class="sw"><div><b>Agente encendido</b><div class="muted">Si está apagado, solo guarda los mensajes.</div></div><button style="flex:0 0 auto" class="${S.agente_activo?'ok':''}" onclick="activo(${!S.agente_activo})">${S.agente_activo?'Encendido':'Apagado'}</button></div></div>
-      <div class="card"><div class="sw"><div><b>Modo</b><div class="muted">Borrador: te propone y tú apruebas. Auto: contesta solo lo que tiene guion.</div></div><button style="flex:0 0 auto" class="${S.modo==='auto'?'acc':''}" onclick="modo('${S.modo==='auto'?'borrador':'auto'}')">${S.modo==='auto'?'Auto':'Borrador'}</button></div></div>
+      <div class="card"><b>Modo</b><div class="muted">Inicio: la primera respuesta a cada lead nuevo del anuncio sale sola en segundos; después la conversación es tuya (el agente solo guarda lo que habría dicho, para medirse contra ti). Borrador: todo queda aquí para aprobar.</div>
+        <div class="row">${[['inicio','Inicio'],['borrador','Borrador']].map(([v,t])=>`<button class="${S.modo===v?'acc':'ghost'}" onclick="modo('${v}')">${t}</button>`).join('')}</div></div>
       <div class="card"><div class="sw"><div><b>Sonido</b><div class="muted">Un tono cuando aparece algo nuevo (con la página abierta).</div></div><button style="flex:0 0 auto" class="${sonido?'ok':''}" onclick="sonido=!sonido;localStorage.setItem('v_sonido',sonido?'on':'off');beep();render()">${sonido?'Activado':'Apagado'}</button></div></div>
       <div class="card"><div class="sw"><div><b>Notificaciones del navegador</b><div class="muted">Aviso aunque estés en otra pestaña. Estado: ${perm==='granted'?'activadas':perm==='denied'?'bloqueadas en el navegador':'sin activar'}</div></div>${perm==='granted'?'':`<button style="flex:0 0 auto" onclick="pedirPermiso()">Activar</button>`}</div></div>
       <div class="card muted">Los precios, el guion y la ventana de 30 min los cambia Claude.</div>`);
@@ -222,8 +226,10 @@ function render(){
 async function verReporte(dias){
   R = await api('reporte',{dias}); R.dias=dias;
   const el=$('#rep'); if(!el) return;
-  const a=R.agente||{}, segs=R.segmentos||{}, mot=R.motivos||{};
+  const a=R.agente||{}, segs=R.segmentos||{}, mot=R.motivos||{}, ini=R.inicio||{}, meses=R.meses||[];
   const fila=(k,v)=>`<tr><td>${k}</td><td>${v}</td></tr>`;
+  const pct=v=>v==null?'—':v+'%';
+  const par=(p,k)=>{ const x=(p||{})[k]; return x&&x.n ? `${x.parecido} <span class="muted">(azar ${x.azar??'—'} · n=${x.n})</span>` : '—'; };
   el.innerHTML=`<div class="filtros">${[[7,'7 días'],[14,'14 días'],[30,'30 días']].map(([d,t])=>`<span class="chip ${dias===d?'on':''}" onclick="verReporte(${d})">${t}</span>`).join('')}</div>
     <div class="card"><b>Embudo</b><table>
       ${fila('Leads nuevos', R.leads??0)}
@@ -232,12 +238,29 @@ async function verReporte(dias){
       ${fila('Cerrados', R.cerrados??0)}
       ${fila('Perdidos', R.perdidos??0)}
     </table><div class="muted" style="margin-top:8px">Solo cuenta a quien te escribió primero. Los otros ${R.otros_chats??0} chats del período son conversaciones que empezaste tú o clientes de antes, y no entran en el embudo.</div></div>
+    <div class="card"><b>Primera respuesta</b><table>
+      ${fila('Leads nuevos', ini.leads??0)}
+      ${fila('Les abrió el agente', ini.abrio_agente??0)}
+      ${fila('Les abriste tú', ini.abrio_red??0)}
+      ${fila('Sin respuesta', ini.sin_respuesta??0)}
+      ${fila('Demora mediana', ini.mediana_min==null?'—':(ini.mediana_min<60?Math.round(ini.mediana_min)+' min':(ini.mediana_min/60).toFixed(1)+' h'))}
+      ${fila('Esperaron más de 8 h', ini.mas_8h??0)}
+      ${fila('Contestaron en 24 h', pct(ini.pct_contestaron))}
+      ${fila('· cuando abrió el agente', pct(ini.pct_contestaron_agente))}
+      ${fila('· cuando abriste tú', pct(ini.pct_contestaron_red))}
+      ${fila('Llegaron a datos de pago', ini.pidieron_datos_pago??0)}
+    </table><div class="muted" style="margin-top:8px">La métrica que manda: % de leads nuevos que contestan la primera respuesta. Septiembre: 59% con 72 min de demora mediana.</div></div>
+    <div class="card"><b>¿Se parece a ti?</b><table>
+      <tr><td><b>Mes</b></td><td><b>Primera respuesta · resto de la charla</b></td></tr>
+      ${meses.map(m=>fila(m.mes, par(m.parecido,'primer_bloque')+' · '+par(m.parecido,'conversacion'))).join('')}
+    </table><div class="muted" style="margin-top:8px">Compara lo que el agente iba a decir con lo que escribiste tú en ese mismo momento (0 = nada que ver, 1 = idéntico). "Azar" es lo que da comparar con mensajes de otros chats: lo que importa es la distancia contra el azar, y que suba mes a mes.</div></div>
     <div class="card"><b>El agente</b><table>
-      ${fila('Respuestas enviadas tal cual', a.enviados??0)}
-      ${fila('Respuestas que editaste', a.editados??0)}
-      ${fila('Descartadas', a.descartados??0)}
-      ${fila('Te las escaló', a.escalados??0)}
-    </table><div class="muted" style="margin-top:8px">Cuando "editadas" baje a casi cero, es momento de pasar a modo Auto.</div></div>
+      ${fila('Enviados solos', a.enviados??0)}
+      ${fila('Aprobados con cambios', a.editados??0)}
+      ${fila('Descartados', a.descartados??0)}
+      ${fila('Borradores sombra (para medir)', a.sombra??0)}
+      ${fila('Te los escaló', a.escalados??0)}
+    </table></div>
     <div class="card"><b>Segundo toque</b><table>
       ${fila('Seguimientos enviados', (R.seguimiento||{}).enviados??0)}
       ${fila('Contestaron', (R.seguimiento||{}).contestaron??0)}
@@ -253,7 +276,7 @@ async function aprobar(id){
   if(r.ok){toast(r.editado?'Enviado con tus cambios':'Enviado');}else{toast(r.error||'Error');btns.forEach(b=>b.disabled=false);return}
   cargar(true);
 }
-async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
+async function generar(lead_id){ toast('Pidiendo propuesta…'); const r=await api('generar',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Propuesta lista en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:x.error||'Error'); if(x.borrador) vista='pend'; cargar(true); }
 async function segundoToque(lead_id){ toast('Escribiendo el seguimiento…'); const r=await api('segundo_toque',{lead_id}); const x=r.resultado||{}; toast(x.borrador?'Listo, revísalo en Por aprobar':x.escalado?'Escalado: '+x.escalado:x.skip?'No aplica: '+x.skip:'Error'); if(x.borrador) vista='pend'; cargar(true); }
 function primerNombre(n){
   if(!n) return '';
@@ -300,7 +323,12 @@ async function editarNota(lead_id){
   if(n===null) return;
   await api('notas',{lead_id,notas:n}); toast('Nota guardada'); cargar(true);
 }
-async function descartar(id){ await api('descartar',{id}); toast('Descartado'); cargar(true); }
+async function descartar(id){ await api('descartar',{id}); toastDeshacer('Descartado', ()=>recuperar(id)); cargar(true); }
+async function recuperar(id){ const r=await api('recuperar',{id}); toast(r.ok?'Recuperado: está otra vez en Por aprobar':(r.error||'No se pudo')); vista='pend'; cargar(true); }
+async function ignorar(lead_id,valor=true){
+  if(valor && !confirm('¿Marcar este chat como "no es lead"? El agente no le va a contestar ni proponer nada, y no cuenta en los números.')) return;
+  await api('ignorar',{lead_id,valor}); toast(valor?'Listo: el agente ya no toca este chat':'El agente vuelve a este chat'); cargar(true);
+}
 async function liberar(lead_id,estado){ await api('liberar',{lead_id,estado}); toast('El agente vuelve a este chat'); cargar(true); }
 async function cerrar(lead_id,estado){ await api('cerrar',{lead_id,estado}); toast('Listo'); cargar(true); }
 async function modo(valor){ await api('modo',{valor}); toast('Modo: '+valor); cargar(true); }
@@ -314,7 +342,7 @@ async function verHist(lead_id,id){
   el.scrollTop=el.scrollHeight;
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{vista=t.dataset.v; render()});
-cargar(true); setInterval(()=>cargar(), 15000);
+cargar(true); setInterval(()=>cargar(), 60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)cargar()});
 </script>
 </body>
