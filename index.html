@@ -38,7 +38,7 @@ button.ok{background:var(--ok);color:#fff}button.acc{background:var(--acc);color
 .pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}.pill.esc{background:#f3dede;color:#7a2e2e}.pill.ok{background:#e2f0e6;color:#2e7a4a}.pill.warn{background:#f6e6d6;color:#8a4a10}
 .sw{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:9;max-width:90%;text-align:center}
-.toast.on{opacity:1;pointer-events:auto}.toast button{flex:0 0 auto;margin-left:10px;padding:4px 12px;border-radius:999px;background:var(--bg);color:var(--ink);font-size:13px}
+.toast.on{opacity:1}.toast.on.accion{pointer-events:auto}.toast button{flex:0 0 auto;margin-left:10px;padding:4px 12px;border-radius:999px;background:var(--bg);color:var(--ink);font-size:13px}
 .filtros{display:flex;gap:6px;margin:10px 12px 0;flex-wrap:wrap;align-items:center}
 .filtros input{flex:1;min-width:150px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
 .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;cursor:pointer}.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -75,8 +75,8 @@ const est = s => ({nuevo:'nuevo', saludo:'saludo', precios:'recibió precios', e
 const diaMX = d => new Date(d).toLocaleDateString('en-CA', {timeZone:'America/Mexico_City'});
 const esHoy = d => d && diaMX(d) === diaMX(Date.now());
 const abierta = ue => ue && (Date.now()-new Date(ue)) < H24;
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),3200)}
-function toastDeshacer(t,fn){const e=$('#toast');e.innerHTML=esc(t)+'<button>Deshacer</button>';e.querySelector('button').onclick=()=>{e.classList.remove('on');fn()};e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),7000)}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.remove('accion');e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),3200)}
+function toastDeshacer(t,fn){const e=$('#toast');e.innerHTML=esc(t)+'<button>Deshacer</button>';e.querySelector('button').onclick=()=>{e.classList.remove('on','accion');fn()};e.classList.add('on','accion');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),7000)}
 async function api(op, extra={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:T,op,...extra})}); if(r.status===401) throw new Error('token'); return r.json()}
 function editando(){ const a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')) return true; return [...document.querySelectorAll('textarea')].some(t=>t.value!==t.defaultValue); }
 function sinRespuesta(l){
@@ -194,7 +194,7 @@ function render(){
     }
   } else if(vista==='seg'){
     const lista=S.segundoToque||[];
-    m.insertAdjacentHTML('beforeend','<div class="card muted">Aparecen a las <b>18 h</b> de callados, o antes si <b>volvieron a entrar por el anuncio</b> — esa es la mejor señal de interés y van primero.<br><br><b>Dentro de las 24 h:</b> "Proponer mensaje" y el agente escribe un seguimiento a medida. Gratis.<br><b>Pasadas las 24 h:</b> "Mandar seguimiento" manda la plantilla aprobada por Meta, con botones. Si toca uno se reabre el chat y el agente sigue solo.</div>');
+    m.insertAdjacentHTML('beforeend','<div class="card muted">Aparecen a las <b>18 h</b> de callados, o antes si <b>volvieron a entrar por el anuncio</b> — esa es la mejor señal de interés y van primero.<br><br><b>Dentro de las 24 h:</b> "Proponer mensaje" y el agente escribe un seguimiento a medida. Gratis.<br><b>Pasadas las 24 h:</b> "Mandar seguimiento" manda la plantilla aprobada por Meta, con botones. Si toca uno se reabre el chat y le contestas tú desde WhatsApp.</div>');
     if(!lista.length) m.insertAdjacentHTML('beforeend','<div class="empty">Nadie pendiente de seguimiento</div>');
     for(const l of lista){
       const h=Math.round(l.horas_silencio);
@@ -255,8 +255,10 @@ async function verReporte(dias){
       ${meses.map(m=>fila(m.mes, par(m.parecido,'primer_bloque')+' · '+par(m.parecido,'conversacion'))).join('')}
     </table><div class="muted" style="margin-top:8px">Compara lo que el agente iba a decir con lo que escribiste tú en ese mismo momento (0 = nada que ver, 1 = idéntico). "Azar" es lo que da comparar con mensajes de otros chats: lo que importa es la distancia contra el azar, y que suba mes a mes.</div></div>
     <div class="card"><b>El agente</b><table>
-      ${fila('Enviados solos', a.enviados??0)}
-      ${fila('Aprobados con cambios', a.editados??0)}
+      ${fila('Salieron solos (primera respuesta)', a.enviados_solos??0)}
+      ${fila('Aprobaste tal cual', a.aprobados??0)}
+      ${fila('Aprobaste con cambios', a.editados??0)}
+      ${fila('Plantillas de seguimiento', a.plantillas??0)}
       ${fila('Descartados', a.descartados??0)}
       ${fila('Borradores sombra (para medir)', a.sombra??0)}
       ${fila('Te los escaló', a.escalados??0)}
